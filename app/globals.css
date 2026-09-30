@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --bg: #f6f6f9;
+  --surface: #ffffff;
+  --surface-2: #f1f1f5;
+  --line: #e5e5ec;
+  --fg: #111118;
+  --muted: #62627a;
+  --subtle: #9a9aae;
+  --accent: #5b4ff0;
+  --accent-strong: #4a3ee0;
+  --accent-soft: #eeedff;
+  --card-shadow: 0 1px 2px rgb(16 16 40 / 0.04), 0 1px 1px rgb(16 16 40 / 0.02);
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #09090d;
+    --surface: #111117;
+    --surface-2: #18181f;
+    --line: #25252e;
+    --fg: #ececf2;
+    --muted: #9494a8;
+    --subtle: #64647a;
+    --accent: #7b70ff;
+    --accent-strong: #8d84ff;
+    --accent-soft: rgb(123 112 255 / 0.12);
+    --card-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+    color-scheme: dark;
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-subtle: var(--subtle);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-soft: var(--accent-soft);
+  --shadow-card: var(--card-shadow);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+::selection {
+  background: rgb(91 79 240 / 0.2);
+}
+
+.bg-grid {
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse at top, black 20%, transparent 70%);
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.animate-fade-up {
+  animation: fade-up 0.35s ease-out both;
+}
+
+@keyframes indeterminate {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.animate-indeterminate {
+  animation: indeterminate 1.4s ease-in-out infinite;
 }
