@@ -49,7 +49,7 @@ function UserCard() {
 
   return (
     <div className="flex items-center gap-3 rounded-xl border border-line bg-surface p-2.5">
-      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-[#7c6cff] to-[#c026d3] text-xs font-semibold text-white">
+      <div className="grid size-9 shrink-0 place-items-center rounded-full bg-linear-to-br from-brand-400 to-brand-700 text-xs font-semibold text-white">
         {initials}
       </div>
       <div className="min-w-0 flex-1">

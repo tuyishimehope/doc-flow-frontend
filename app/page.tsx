@@ -57,7 +57,7 @@ export default function Home() {
         <h1 className="mt-6 text-4xl leading-[1.08] font-semibold tracking-tight text-fg sm:text-6xl">
           From stacks of files
           <br />
-          <span className="bg-linear-to-r from-[#5b4ff0] via-[#8b5cf6] to-[#c026d3] bg-clip-text text-transparent">
+          <span className="bg-linear-to-r from-brand-700 via-brand-500 to-brand-300 bg-clip-text text-transparent">
             to structured data.
           </span>
         </h1>
@@ -102,8 +102,8 @@ export default function Home() {
       </section>
 
       <section className="relative mx-auto max-w-6xl px-6 py-20">
-        <div className="relative overflow-hidden rounded-3xl bg-[#0d0b24] px-8 py-14 text-center sm:px-16">
-          <div className="absolute -top-24 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-[#5b4ff0] opacity-50 blur-[100px]" />
+        <div className="relative overflow-hidden rounded-3xl bg-brand-950 px-8 py-14 text-center sm:px-16">
+          <div className="absolute -top-24 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-brand-500 opacity-50 blur-[100px]" />
           <h2 className="relative text-3xl font-semibold tracking-tight text-white">Process your first document in a minute.</h2>
           <p className="relative mx-auto mt-3 max-w-lg text-white/60">
             Create an account, drop in a file and watch the result arrive.
