@@ -8,9 +8,9 @@
   --fg: #111118;
   --muted: #62627a;
   --subtle: #9a9aae;
-  --accent: #5b4ff0;
-  --accent-strong: #4a3ee0;
-  --accent-soft: #eeedff;
+  --accent: var(--color-brand-500);
+  --accent-strong: var(--color-brand-600);
+  --accent-soft: var(--color-brand-50);
   --card-shadow: 0 1px 2px rgb(16 16 40 / 0.04), 0 1px 1px rgb(16 16 40 / 0.02);
   color-scheme: light;
 }
@@ -24,12 +24,27 @@
     --fg: #ececf2;
     --muted: #9494a8;
     --subtle: #64647a;
-    --accent: #7b70ff;
-    --accent-strong: #8d84ff;
-    --accent-soft: rgb(123 112 255 / 0.12);
+    --accent: #3d6fff;
+    --accent-strong: var(--color-brand-400);
+    --accent-soft: rgb(30 89 255 / 0.14);
     --card-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
     color-scheme: dark;
   }
+}
+
+/* Brand scale built around #1E59FF (500). */
+@theme {
+  --color-brand-50: #eef4ff;
+  --color-brand-100: #dbe6ff;
+  --color-brand-200: #bdd0ff;
+  --color-brand-300: #8fb0ff;
+  --color-brand-400: #5a86ff;
+  --color-brand-500: #1e59ff;
+  --color-brand-600: #0f43e6;
+  --color-brand-700: #0b34b8;
+  --color-brand-800: #0d2e91;
+  --color-brand-900: #102a73;
+  --color-brand-950: #07143d;
 }
 
 @theme inline {
@@ -54,7 +69,7 @@ body {
 }
 
 ::selection {
-  background: rgb(91 79 240 / 0.2);
+  background: rgb(30 89 255 / 0.2);
 }
 
 .bg-grid {

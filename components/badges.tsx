@@ -74,12 +74,12 @@ export function TypeBadge({ type }: { type: ProcessingType }) {
 
 const extColors: Record<string, string> = {
   pdf: "from-rose-500 to-orange-500",
-  docx: "from-blue-500 to-indigo-500",
+  docx: "from-brand-400 to-brand-600",
   jpg: "from-emerald-500 to-teal-500",
   jpeg: "from-emerald-500 to-teal-500",
   png: "from-emerald-500 to-teal-500",
-  tif: "from-violet-500 to-fuchsia-500",
-  tiff: "from-violet-500 to-fuchsia-500",
+  tif: "from-cyan-500 to-sky-600",
+  tiff: "from-cyan-500 to-sky-600",
 };
 
 export function FileIcon({ name, className }: { name: string; className?: string }) {
