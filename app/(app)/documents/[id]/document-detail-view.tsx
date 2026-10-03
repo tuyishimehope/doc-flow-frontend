@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,12 +11,13 @@ import {
   Download,
   FileQuestion,
   History,
+  Pencil,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { DocumentStatusBadge, FileIcon } from "@/components/badges";
-import { Button, buttonClass, Card, Dialog, EmptyState, ErrorBanner, Skeleton } from "@/components/ui";
+import { Button, buttonClass, Card, Dialog, EmptyState, ErrorBanner, Input, Skeleton } from "@/components/ui";
 import { ApiError, api, saveBlob } from "@/lib/api";
 import {
   isActive,
@@ -24,7 +25,7 @@ import {
   useDocument,
   useJobs,
   useProcessingRequests,
-  useSetDocumentStatus,
+  useUpdateDocument,
 } from "@/lib/queries";
 import { errorText, formatDate } from "@/lib/utils";
 import { AttemptsCard, PreviewCard, ReprocessCard, RunsCard } from "./side-cards";
@@ -36,10 +37,12 @@ export function DocumentDetailView({ id }: { id: number }) {
   const requests = useProcessingRequests(id);
   const polling = !!requests.data?.some((r) => isActive(r.status));
   const jobs = useJobs(id, polling);
-  const setStatus = useSetDocumentStatus();
+  const setStatus = useUpdateDocument();
+  const rename = useUpdateDocument();
   const remove = useDeleteDocument();
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [newName, setNewName] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
 
   if (document.error) {
@@ -88,6 +91,22 @@ export function DocumentDetailView({ id }: { id: number }) {
     );
   }
 
+  function submitRename(e: FormEvent) {
+    e.preventDefault();
+    const name = newName?.trim();
+    if (!doc || !name) return;
+    if (name === doc.name) return setNewName(null);
+    rename.mutate(
+      { id: doc.id, name },
+      {
+        onSuccess: () => {
+          toast.success("Document renamed");
+          setNewName(null);
+        },
+      },
+    );
+  }
+
   function confirmRemove() {
     remove.mutate(id, {
       onSuccess: () => {
@@ -111,6 +130,17 @@ export function DocumentDetailView({ id }: { id: number }) {
             <span className="flex items-center gap-3">
               <FileIcon name={doc.name} className="size-9 text-[9px]" />
               <span className="truncate">{doc.name}</span>
+              <button
+                onClick={() => {
+                  rename.reset();
+                  setNewName(doc.name);
+                }}
+                aria-label="Rename document"
+                title="Rename"
+                className="grid size-8 shrink-0 place-items-center rounded-lg text-subtle hover:bg-surface-2 hover:text-fg"
+              >
+                <Pencil className="size-4" />
+              </button>
               <DocumentStatusBadge status={doc.status} />
             </span>
           ) : (
@@ -155,6 +185,7 @@ export function DocumentDetailView({ id }: { id: number }) {
               request={selected}
               jobs={jobs.data}
               isLatest={selected.id === runs[0]?.id}
+              onQueued={setSelectedId}
             />
           ) : (
             <Card>
@@ -174,6 +205,28 @@ export function DocumentDetailView({ id }: { id: number }) {
           <AttemptsCard jobs={jobs.data} loading={jobs.isPending} />
         </div>
       </div>
+
+      <Dialog open={newName !== null} onClose={() => setNewName(null)} title="Rename document">
+        <form onSubmit={submitRename}>
+          {rename.error && <ErrorBanner className="mb-4" message={errorText(rename.error)} />}
+          <Input
+            aria-label="Document name"
+            value={newName ?? ""}
+            onChange={(e) => setNewName(e.target.value)}
+            maxLength={255}
+            required
+            autoFocus
+          />
+          <div className="mt-6 flex justify-end gap-2">
+            <Button type="button" variant="secondary" onClick={() => setNewName(null)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={rename.isPending} disabled={!newName?.trim()}>
+              Save
+            </Button>
+          </div>
+        </form>
+      </Dialog>
 
       <Dialog
         open={confirmDelete}

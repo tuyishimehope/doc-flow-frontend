@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Ban, Check, Copy, FileJson, FileSpreadsheet, RotateCw, XCircle } from "lucide-react";
+import { Ban, Check, Copy, FileJson, FileSpreadsheet, RotateCcw, RotateCw, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { StatusBadge, typeIcons } from "@/components/badges";
 import { ResultView } from "@/components/result-view";
 import { Button, Card, ErrorBanner, Skeleton } from "@/components/ui";
 import { api, saveBlob } from "@/lib/api";
-import { isActive, useCancelRequest, useResult } from "@/lib/queries";
+import { isActive, useCancelRequest, useResult, useRetryRequest } from "@/lib/queries";
 import type { ProcessingJob, ProcessingRequest, ProcessingStatus } from "@/lib/types";
 import { cn, errorText, PROCESSING_TYPES, timeAgo } from "@/lib/utils";
 
@@ -75,15 +75,18 @@ export function RunPanel({
   request,
   jobs,
   isLatest,
+  onQueued,
 }: {
   documentId: number;
   documentName: string;
   request: ProcessingRequest;
   jobs: ProcessingJob[] | undefined;
   isLatest: boolean;
+  onQueued: (requestId: number) => void;
 }) {
   const result = useResult(request);
   const cancel = useCancelRequest(documentId);
+  const retry = useRetryRequest();
   const [exporting, setExporting] = useState<"json" | "csv" | null>(null);
   const [copied, setCopied] = useState(false);
   const Icon = typeIcons[request.processing_type];
@@ -94,6 +97,25 @@ export function RunPanel({
     request.status === "FAILED" && isLatest
       ? jobs?.find((j) => j.failure_reason)?.failure_reason
       : undefined;
+
+  const retryButton = (
+    <Button
+      variant="secondary"
+      size="sm"
+      loading={retry.isPending}
+      onClick={() =>
+        retry.mutate(request.id, {
+          onSuccess: (res) => {
+            toast.success("Retry queued");
+            onQueued(res.processing_request_id);
+          },
+          onError: (e) => toast.error("Couldn't retry", { description: errorText(e) }),
+        })
+      }
+    >
+      {!retry.isPending && <RotateCcw className="size-3.5" />} Retry this run
+    </Button>
+  );
 
   async function exportAs(format: "json" | "csv") {
     setExporting(format);
@@ -182,10 +204,16 @@ export function RunPanel({
         ) : request.status === "FAILED" ? (
           <div className="space-y-3">
             <ErrorBanner message={failure ?? "Processing failed after all retries."} />
-            <p className="text-xs text-muted">Try running it again from the panel on the right, or with different instructions.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-xs text-muted">Retry with the same settings, or start a different run from the panel on the right.</p>
+              {retryButton}
+            </div>
           </div>
         ) : request.status === "CANCELLED" ? (
-          <p className="py-6 text-center text-sm text-muted">This run was cancelled before it started.</p>
+          <div className="flex flex-col items-center gap-4 py-6">
+            <p className="text-sm text-muted">This run was cancelled before it started.</p>
+            {retryButton}
+          </div>
         ) : result.error ? (
           <ErrorBanner message={errorText(result.error)} />
         ) : result.isPending ? (

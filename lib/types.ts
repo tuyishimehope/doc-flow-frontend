@@ -132,3 +132,22 @@ export interface ProcessingResult {
   result: string | InvoiceExtraction | ContractMetadata;
   confidence_score: number | null;
 }
+
+export interface RecentFailure {
+  processing_request_id: number;
+  document_id: number;
+  document_name: string;
+  processing_type: ProcessingType;
+  failure_reason: string | null;
+  failed_at: string | null;
+}
+
+export interface UserStats {
+  documents: { total: number; active: number; archived: number };
+  processing_requests: {
+    total: number;
+    by_status: Partial<Record<ProcessingStatus, number>>;
+    by_type: Partial<Record<ProcessingType, number>>;
+  };
+  recent_failures: RecentFailure[];
+}

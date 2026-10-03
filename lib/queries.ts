@@ -17,6 +17,7 @@ const POLL_MS = 2500;
 
 export const keys = {
   me: ["me"] as const,
+  stats: ["stats"] as const,
   documents: ["documents"] as const,
   documentList: (params: object) => ["documents", "list", params] as const,
   document: (id: number) => ["documents", id] as const,
@@ -36,6 +37,18 @@ export function useMe() {
     queryFn: api.me,
     enabled: !!token,
     staleTime: 5 * 60_000,
+  });
+}
+
+export function useStats() {
+  return useQuery({
+    queryKey: keys.stats,
+    queryFn: api.myStats,
+    // Keep the dashboard counts live while anything is still running.
+    refetchInterval: (q) => {
+      const byStatus = q.state.data?.processing_requests.by_status;
+      return byStatus && ACTIVE_STATUSES.some((s) => (byStatus[s] ?? 0) > 0) ? POLL_MS * 2 : false;
+    },
   });
 }
 
@@ -111,7 +124,10 @@ export function useUploadDocument() {
       instructions?: string;
       onProgress?: (p: number) => void;
     }) => api.uploadDocument(input, onProgress),
-    onSuccess: () => qc.invalidateQueries({ queryKey: keys.documents }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.documents });
+      qc.invalidateQueries({ queryKey: keys.stats });
+    },
   });
 }
 
@@ -123,6 +139,19 @@ export function useReprocess(documentId: number) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: keys.requests(documentId) });
       qc.invalidateQueries({ queryKey: keys.jobs(documentId) });
+      qc.invalidateQueries({ queryKey: keys.stats });
+    },
+  });
+}
+
+export function useRetryRequest() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (requestId: number) => api.retryRequest(requestId),
+    onSuccess: (res) => {
+      qc.invalidateQueries({ queryKey: keys.requests(res.document_id) });
+      qc.invalidateQueries({ queryKey: keys.jobs(res.document_id) });
+      qc.invalidateQueries({ queryKey: keys.stats });
     },
   });
 }
@@ -140,14 +169,15 @@ export function useCancelRequest(documentId: number) {
   });
 }
 
-export function useSetDocumentStatus() {
+export function useUpdateDocument() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, status }: { id: number; status: "ACTIVE" | "ARCHIVED" }) =>
-      api.setDocumentStatus(id, status),
+    mutationFn: ({ id, ...data }: { id: number; name?: string; status?: "ACTIVE" | "ARCHIVED" }) =>
+      api.updateDocument(id, data),
     onSuccess: (doc) => {
       qc.setQueryData(keys.document(doc.id), doc);
       qc.invalidateQueries({ queryKey: [...keys.documents, "list"] });
+      qc.invalidateQueries({ queryKey: keys.stats });
     },
   });
 }
@@ -159,6 +189,7 @@ export function useDeleteDocument() {
     onSuccess: (doc) => {
       qc.removeQueries({ queryKey: keys.document(doc.id) });
       qc.invalidateQueries({ queryKey: [...keys.documents, "list"] });
+      qc.invalidateQueries({ queryKey: keys.stats });
     },
   });
 }

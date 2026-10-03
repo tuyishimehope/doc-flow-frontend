@@ -13,6 +13,7 @@ import type {
   ProcessingType,
   Token,
   User,
+  UserStats,
 } from "./types";
 
 export const API_URL = (
@@ -127,6 +128,9 @@ export const api = {
   me() {
     return request<User>("/api/v1/users/me");
   },
+  myStats() {
+    return request<UserStats>("/api/v1/users/me/stats");
+  },
   updateUser(id: number, data: Partial<Pick<User, "first_name" | "last_name" | "email">>) {
     return request<User>(`/api/v1/users/${id}`, { method: "PATCH", json: data });
   },
@@ -161,8 +165,8 @@ export const api = {
   getDocument(id: number) {
     return request<DocFlowDocument>(`/api/v1/documents/${id}`);
   },
-  setDocumentStatus(id: number, status: "ACTIVE" | "ARCHIVED") {
-    return request<DocFlowDocument>(`/api/v1/documents/${id}`, { method: "PATCH", json: { status } });
+  updateDocument(id: number, data: { name?: string; status?: "ACTIVE" | "ARCHIVED" }) {
+    return request<DocFlowDocument>(`/api/v1/documents/${id}`, { method: "PATCH", json: data });
   },
   deleteDocument(id: number) {
     return request<DocFlowDocument>(`/api/v1/documents/${id}`, { method: "DELETE" });
@@ -236,6 +240,12 @@ export const api = {
   },
   cancelRequest(id: number) {
     return request<ProcessingStatusResponse>(`/api/v1/processing-requests/${id}/cancel`, {
+      method: "POST",
+    });
+  },
+  /** Queues a new request with the same type and instructions as a failed or cancelled one. */
+  retryRequest(id: number) {
+    return request<DocumentProcessingResponse>(`/api/v1/processing-requests/${id}/retry`, {
       method: "POST",
     });
   },
