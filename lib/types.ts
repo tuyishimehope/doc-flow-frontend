@@ -151,3 +151,75 @@ export interface UserStats {
   };
   recent_failures: RecentFailure[];
 }
+
+// ---- Chat ----
+
+export type ChatModel = "auto" | "openrouter" | "gemini" | "groq" | "openai";
+
+export interface ModelOption {
+  id: string;
+  label: string;
+  model: string | null;
+}
+
+export interface ModelsResponse {
+  default: string;
+  models: ModelOption[];
+}
+
+export interface Conversation {
+  id: number;
+  title: string;
+  document_id: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PaginatedConversations extends Paginated {
+  conversations: Conversation[];
+}
+
+export interface Citation {
+  page: number;
+  quote: string;
+}
+
+export type ChatMessageStatus = "complete" | "cancelled" | "error";
+
+export interface ChatMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  status: ChatMessageStatus;
+  model: string | null;
+  citations?: Citation[] | null;
+  grounded?: boolean | null;
+  created_at: string;
+}
+
+export interface ConversationDetail extends Conversation {
+  messages: ChatMessage[];
+}
+
+export interface StreamChatRequest {
+  message: string;
+  model?: ChatModel | null;
+  conversation_id?: number | null;
+}
+
+/** Server-Sent Events from POST /chat/stream, in order: conversation, token*, done | error. */
+export type ChatStreamEvent =
+  | { event: "conversation"; data: { conversation_id: number } }
+  | { event: "token"; data: { text: string } }
+  | {
+      event: "done";
+      data: {
+        provider: string;
+        model: string;
+        input_tokens: number | null;
+        output_tokens: number | null;
+        latency_ms: number | null;
+        first_piece_ms: number | null;
+      };
+    }
+  | { event: "error"; data: { code: number | string; message: string } };

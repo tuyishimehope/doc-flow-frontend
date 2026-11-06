@@ -107,3 +107,22 @@ body {
 .animate-indeterminate {
   animation: indeterminate 1.4s ease-in-out infinite;
 }
+
+/* Blinking caret at the end of a streaming markdown answer. */
+.streaming-caret > :last-child:not(ul, ol, pre, table, div)::after,
+.streaming-caret > :is(ul, ol):last-child > li:last-child::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.1em;
+  margin-left: 2px;
+  vertical-align: -0.2em;
+  background: var(--accent);
+  animation: caret-blink 1s steps(2, start) infinite;
+}
+
+@keyframes caret-blink {
+  to {
+    visibility: hidden;
+  }
+}

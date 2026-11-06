@@ -2,13 +2,20 @@
 
 import {
   keepPreviousData,
+  useInfiniteQuery,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { api } from "./api";
 import { useToken } from "./auth-store";
-import type { DocumentStatus, ProcessingRequest, ProcessingStatus, ProcessingType } from "./types";
+import type {
+  ConversationDetail,
+  DocumentStatus,
+  ProcessingRequest,
+  ProcessingStatus,
+  ProcessingType,
+} from "./types";
 
 export const ACTIVE_STATUSES: ProcessingStatus[] = ["PENDING", "QUEUED", "PROCESSING"];
 export const isActive = (status: ProcessingStatus) => ACTIVE_STATUSES.includes(status);
@@ -26,7 +33,13 @@ export const keys = {
   result: (requestId: number) => ["result", requestId] as const,
   files: (params: object) => ["files", params] as const,
   fileBlob: (fileId: number) => ["file-blob", fileId] as const,
+  conversations: ["conversations"] as const,
+  conversationList: ["conversations", "list"] as const,
+  conversation: (id: number) => ["conversations", id] as const,
+  chatModels: ["chat-models"] as const,
 };
+
+const CONVERSATIONS_PAGE = 20;
 
 // ---- Queries ----
 
@@ -213,5 +226,55 @@ export function useUpdateProfile() {
 export function useChangePassword() {
   return useMutation({
     mutationFn: (v: { current: string; next: string }) => api.changePassword(v.current, v.next),
+  });
+}
+
+// ---- Chat ----
+
+export function useChatModels() {
+  return useQuery({ queryKey: keys.chatModels, queryFn: api.chatModels, staleTime: Infinity });
+}
+
+/** Most recently active first; "Load more" pages through with skip/limit. */
+export function useConversations() {
+  return useInfiniteQuery({
+    queryKey: keys.conversationList,
+    queryFn: ({ pageParam }) =>
+      api.listConversations({ skip: pageParam, limit: CONVERSATIONS_PAGE }),
+    initialPageParam: 0,
+    getNextPageParam: (last) => (last.has_more ? last.skip + last.limit : undefined),
+  });
+}
+
+/** Pass `null` on the new-chat page, where there is nothing to load yet. */
+export function useConversation(id: number | null) {
+  return useQuery({
+    queryKey: keys.conversation(id ?? 0),
+    queryFn: () => api.getConversation(id!),
+    enabled: id !== null,
+  });
+}
+
+export function useRenameConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, title }: { id: number; title: string }) => api.renameConversation(id, title),
+    onSuccess: (conversation) => {
+      qc.setQueryData<ConversationDetail>(keys.conversation(conversation.id), (old) =>
+        old ? { ...old, ...conversation } : old,
+      );
+      qc.invalidateQueries({ queryKey: keys.conversationList });
+    },
+  });
+}
+
+export function useDeleteConversation() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.deleteConversation(id),
+    onSuccess: (_, id) => {
+      qc.removeQueries({ queryKey: keys.conversation(id) });
+      qc.invalidateQueries({ queryKey: keys.conversationList });
+    },
   });
 }

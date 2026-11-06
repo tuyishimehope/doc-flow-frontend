@@ -3,7 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FileStack, LayoutDashboard, LogOut, Menu, Plus, Settings, X } from "lucide-react";
+import { FileStack, LayoutDashboard, LogOut, Menu, MessagesSquare, Plus, Settings, X } from "lucide-react";
 import { Logo } from "./logo";
 import { buttonClass, Skeleton } from "./ui";
 import { useMe } from "@/lib/queries";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/documents", label: "Documents", icon: FileStack },
+  { href: "/chat", label: "Chat", icon: MessagesSquare },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

@@ -1,9 +1,15 @@
 import { tokenStore } from "./auth-store";
+import { readSSE } from "./sse";
 import type {
+  ChatStreamEvent,
+  Conversation,
+  ConversationDetail,
   DocFlowDocument,
   DocumentProcessingResponse,
   DocumentStatus,
   MessageResponse,
+  ModelsResponse,
+  PaginatedConversations,
   PaginatedDocuments,
   PaginatedFiles,
   ProcessingJob,
@@ -11,6 +17,7 @@ import type {
   ProcessingResult,
   ProcessingStatusResponse,
   ProcessingType,
+  StreamChatRequest,
   Token,
   User,
   UserStats,
@@ -80,7 +87,9 @@ async function send(path: string, options: RequestOptions = {}) {
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, { ...init, headers: finalHeaders, body });
-  } catch {
+  } catch (error) {
+    // Let callers tell a deliberate stop apart from a network failure.
+    if (init.signal?.aborted) throw error;
     throw new ApiError(0, "Can't reach the DocFlow API. Is the backend running?");
   }
 
@@ -252,5 +261,42 @@ export const api = {
   async exportResult(id: number, format: "json" | "csv") {
     const response = await send(`/api/v1/processing-requests/${id}/export${query({ format })}`);
     return response.blob();
+  },
+
+  // Chat
+  chatModels() {
+    return request<ModelsResponse>("/api/v1/chat/models");
+  },
+  listConversations(params: { skip?: number; limit?: number }) {
+    return request<PaginatedConversations>(`/api/v1/chat/conversations${query(params)}`);
+  },
+  getConversation(id: number) {
+    return request<ConversationDetail>(`/api/v1/chat/conversations/${id}`);
+  },
+  renameConversation(id: number, title: string) {
+    return request<Conversation>(`/api/v1/chat/conversations/${id}`, {
+      method: "PATCH",
+      json: { title },
+    });
+  },
+  async deleteConversation(id: number) {
+    await send(`/api/v1/chat/conversations/${id}`, { method: "DELETE" }); // 204, no body
+  },
+  /**
+   * Streams an answer. HTTP errors (429, 404, 5xx) throw `ApiError` before the first event;
+   * a failure after that arrives as an `error` event. Aborting `signal` stops the answer,
+   * and the backend keeps what was written so far as a cancelled message.
+   */
+  async *streamChat(body: StreamChatRequest, signal?: AbortSignal): AsyncGenerator<ChatStreamEvent> {
+    const response = await send("/api/v1/chat/stream", {
+      method: "POST",
+      json: body,
+      signal,
+      headers: { Accept: "text/event-stream" },
+    });
+    if (!response.body) throw new ApiError(0, "The answer stream could not be read.");
+    for await (const { event, data } of readSSE(response.body)) {
+      yield { event, data: JSON.parse(data) } as ChatStreamEvent;
+    }
   },
 };
