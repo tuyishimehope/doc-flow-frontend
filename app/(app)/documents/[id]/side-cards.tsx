@@ -160,21 +160,35 @@ export function AttemptsCard({ jobs, loading }: { jobs: ProcessingJob[] | undefi
   );
 }
 
-export function PreviewCard({ fileId, name }: { fileId: number; name: string }) {
+/** `page` opens a PDF at that page; `open` is controlled so citations can jump here. */
+export function PreviewCard({
+  fileId,
+  name,
+  open,
+  onOpenChange,
+  page,
+}: {
+  fileId: number;
+  name: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  page?: number | null;
+}) {
   const ext = fileExtension(name);
-  const previewable = ["pdf", "png", "jpg", "jpeg"].includes(ext);
-  const [open, setOpen] = useState(false);
+  // A renamed document can lose its extension; the Q&A copies are always PDFs.
+  const isPdf = ext === "pdf" || !["docx", "png", "jpg", "jpeg", "tif", "tiff"].includes(ext);
+  const previewable = isPdf || ["png", "jpg", "jpeg"].includes(ext);
   const preview = useFilePreview(fileId, open && previewable);
 
   return (
     <Card className="overflow-hidden">
       <CardHeader
         icon={<Eye className="size-4" />}
-        title="Original file"
+        title={page && isPdf ? `Original file · page ${page}` : "Original file"}
         description={previewable ? "Preview the uploaded document" : "Preview isn't available for this format — use Download."}
         action={
           previewable && (
-            <Button variant="secondary" size="sm" onClick={() => setOpen((o) => !o)}>
+            <Button variant="secondary" size="sm" onClick={() => onOpenChange(!open)}>
               {open ? "Hide" : "Show preview"}
             </Button>
           )
@@ -190,8 +204,14 @@ export function PreviewCard({ fileId, name }: { fileId: number; name: string }) 
             <div className="grid h-96 place-items-center">
               <Spinner />
             </div>
-          ) : ext === "pdf" ? (
-            <iframe src={preview.data.url} title={name} className="h-[640px] w-full" />
+          ) : isPdf ? (
+            // Keyed by page: the viewer only reads #page when it loads.
+            <iframe
+              key={page ?? 0}
+              src={page ? `${preview.data.url}#page=${page}` : preview.data.url}
+              title={name}
+              className="h-[640px] w-full"
+            />
           ) : (
             // eslint-disable-next-line @next/next/no-img-element -- blob URL, next/image can't optimise it
             <img src={preview.data.url} alt={name} className="mx-auto max-h-[640px] object-contain p-4" />

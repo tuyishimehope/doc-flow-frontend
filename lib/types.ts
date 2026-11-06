@@ -33,10 +33,14 @@ export interface MessageResponse {
   message: string;
 }
 
+export type IndexStatus = "NONE" | "PROCESSING" | "READY" | "FAILED";
+
 export interface DocFlowDocument {
   id: number;
   name: string;
   status: DocumentStatus;
+  /** Whether the stored Q&A text is split into chunks and embedded (retrieval). */
+  index_status?: IndexStatus;
   file_id: number;
   user_id: number;
   created_at: string;
@@ -223,3 +227,65 @@ export type ChatStreamEvent =
       };
     }
   | { event: "error"; data: { code: number | string; message: string } };
+
+export type AskMode = "auto" | "pages" | "chunks";
+
+export interface DocumentAnswer {
+  conversation_id: number;
+  answer: string;
+  found: boolean;
+  grounded: boolean;
+  citations: Citation[];
+  pages: number;
+  model: string;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  mode: "pages" | "chunks";
+}
+
+export interface ImageAnswer {
+  conversation_id: number;
+  answer: string;
+  model: string;
+  input_tokens: number | null;
+  output_tokens: number | null;
+}
+
+export interface StoredDocument {
+  document_id: number;
+  file_id: number;
+  name: string;
+  pages: number;
+  index_status: IndexStatus;
+}
+
+export interface Transcription {
+  id: number;
+  text: string;
+  model: string;
+  created_at: string;
+}
+
+export interface DailyUsage {
+  day: string;
+  answers: number;
+  input_tokens: number;
+  output_tokens: number;
+  cached_tokens: number;
+  reasoning_tokens: number;
+}
+
+export interface ChatStats {
+  days: number;
+  answers: number;
+  complete: number;
+  errors: number;
+  cancelled: number;
+  error_rate: number;
+  latency: { samples: number; p50_ms: number | null; p95_ms: number | null };
+  input_tokens: number;
+  output_tokens: number;
+  cached_tokens: number;
+  reasoning_tokens: number;
+  per_day: DailyUsage[];
+}

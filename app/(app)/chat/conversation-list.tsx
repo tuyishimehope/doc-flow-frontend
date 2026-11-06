@@ -9,7 +9,7 @@ import { Button, buttonClass, Dialog, ErrorBanner, Skeleton } from "@/components
 import { useConversations, useDeleteConversation, useRenameConversation } from "@/lib/queries";
 import type { Conversation } from "@/lib/types";
 import { cn, errorText, timeAgo } from "@/lib/utils";
-import { useChat } from "./chat-provider";
+import { useChat } from "@/components/chat-provider";
 
 export function activeConversationId(pathname: string) {
   const match = /^\/chat\/(\d+)/.exec(pathname);

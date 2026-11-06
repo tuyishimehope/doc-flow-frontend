@@ -37,6 +37,7 @@ export const keys = {
   conversationList: ["conversations", "list"] as const,
   conversation: (id: number) => ["conversations", id] as const,
   chatModels: ["chat-models"] as const,
+  chatStats: (days: number) => ["chat-stats", days] as const,
 };
 
 const CONVERSATIONS_PAGE = 20;
@@ -78,8 +79,13 @@ export function useDocuments(params: {
   });
 }
 
+/** Polls while the document is being indexed for retrieval. */
 export function useDocument(id: number) {
-  return useQuery({ queryKey: keys.document(id), queryFn: () => api.getDocument(id) });
+  return useQuery({
+    queryKey: keys.document(id),
+    queryFn: () => api.getDocument(id),
+    refetchInterval: (q) => (q.state.data?.index_status === "PROCESSING" ? POLL_MS : false),
+  });
 }
 
 /** Polls while any run is still pending/queued/processing. */
@@ -276,5 +282,33 @@ export function useDeleteConversation() {
       qc.removeQueries({ queryKey: keys.conversation(id) });
       qc.invalidateQueries({ queryKey: keys.conversationList });
     },
+  });
+}
+
+export function useChatStats(days: number) {
+  return useQuery({
+    queryKey: keys.chatStats(days),
+    queryFn: () => api.chatStats(days),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useStoreForQuestions() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ file, onProgress }: { file: File; onProgress?: (p: number) => void }) =>
+      api.storeForQuestions(file, onProgress),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: keys.documents });
+      qc.invalidateQueries({ queryKey: keys.stats });
+    },
+  });
+}
+
+export function useReindexDocument() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => api.reindexDocument(id),
+    onSuccess: (_, id) => qc.invalidateQueries({ queryKey: keys.document(id) }),
   });
 }

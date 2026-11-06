@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { typeIcons } from "@/components/badges";
 import { DocumentRow, DocumentRowSkeleton } from "@/components/document-row";
+import { AiUsageCard } from "@/components/ai-usage-card";
 import { Button, buttonClass, Card, CardHeader, EmptyState, ErrorBanner, Skeleton } from "@/components/ui";
 import { ACTIVE_STATUSES, useDocuments, useMe, useRetryRequest, useStats } from "@/lib/queries";
 import type { ProcessingStatus, ProcessingType, RecentFailure, UserStats } from "@/lib/types";
@@ -274,6 +275,8 @@ export function DashboardView() {
               </div>
             )}
           </Card>
+
+          <AiUsageCard />
 
           {s && s.recent_failures.length > 0 && (
             <Card className="overflow-hidden">

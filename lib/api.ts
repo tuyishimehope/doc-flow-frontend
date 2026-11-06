@@ -1,12 +1,16 @@
 import { tokenStore } from "./auth-store";
 import { readSSE } from "./sse";
 import type {
+  AskMode,
+  ChatStats,
   ChatStreamEvent,
   Conversation,
   ConversationDetail,
   DocFlowDocument,
+  DocumentAnswer,
   DocumentProcessingResponse,
   DocumentStatus,
+  ImageAnswer,
   MessageResponse,
   ModelsResponse,
   PaginatedConversations,
@@ -17,8 +21,10 @@ import type {
   ProcessingResult,
   ProcessingStatusResponse,
   ProcessingType,
+  StoredDocument,
   StreamChatRequest,
   Token,
+  Transcription,
   User,
   UserStats,
 } from "./types";
@@ -125,6 +131,39 @@ export function saveBlob(blob: Blob, filename: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function uploadForm<T>(path: string, form: FormData, onProgress?: (fraction: number) => void) {
+  return new Promise<T>((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${API_URL}${path}`);
+    const token = tokenStore.get();
+    if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+    xhr.upload.onprogress = (e) => {
+      if (e.lengthComputable) onProgress?.(e.loaded / e.total);
+    };
+    xhr.onerror = () => reject(new ApiError(0, "Can't reach the DocFlow API. Is the backend running?"));
+    xhr.onload = async () => {
+      const response = new Response(xhr.responseText, {
+        status: xhr.status,
+        statusText: xhr.statusText,
+      });
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(await response.json());
+        return;
+      }
+      if (xhr.status === 401 && token) onUnauthorized?.();
+      reject(new ApiError(xhr.status, await errorMessage(response)));
+    };
+    xhr.send(form);
+  });
+}
+
+function fileForm(file: File, fields: Record<string, string> = {}) {
+  const form = new FormData();
+  form.append("file", file);
+  for (const [key, value] of Object.entries(fields)) form.append(key, value);
+  return form;
+}
+
 export const api = {
   // Auth & users
   login(email: string, password: string) {
@@ -198,33 +237,25 @@ export const api = {
     input: { file: File; processing_type: ProcessingType; instructions?: string },
     onProgress?: (fraction: number) => void,
   ) {
-    return new Promise<DocumentProcessingResponse>((resolve, reject) => {
-      const form = new FormData();
-      form.append("file", input.file);
-      form.append("processing_type", input.processing_type);
-      if (input.instructions) form.append("instructions", input.instructions);
-
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", `${API_URL}/api/v1/documents`);
-      const token = tokenStore.get();
-      if (token) xhr.setRequestHeader("Authorization", `Bearer ${token}`);
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) onProgress?.(e.loaded / e.total);
-      };
-      xhr.onerror = () => reject(new ApiError(0, "Can't reach the DocFlow API. Is the backend running?"));
-      xhr.onload = async () => {
-        const response = new Response(xhr.responseText, {
-          status: xhr.status,
-          statusText: xhr.statusText,
-        });
-        if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(await response.json());
-          return;
-        }
-        if (xhr.status === 401 && token) onUnauthorized?.();
-        reject(new ApiError(xhr.status, await errorMessage(response)));
-      };
-      xhr.send(form);
+    const form = new FormData();
+    form.append("file", input.file);
+    form.append("processing_type", input.processing_type);
+    if (input.instructions) form.append("instructions", input.instructions);
+    return uploadForm<DocumentProcessingResponse>("/api/v1/documents", form, onProgress);
+  },
+  /** Stores a PDF's text page by page so it can be asked about. */
+  storeForQuestions(file: File, onProgress?: (fraction: number) => void) {
+    const form = new FormData();
+    form.append("file", file);
+    return uploadForm<StoredDocument>("/api/v1/documents/qa", form, onProgress);
+  },
+  askDocument(id: number, body: { question: string; conversation_id?: number | null; mode?: AskMode }) {
+    return request<DocumentAnswer>(`/api/v1/documents/${id}/ask`, { method: "POST", json: body });
+  },
+  /** Starts (re-)indexing in the background; poll the document for `index_status`. */
+  reindexDocument(id: number) {
+    return request<{ document_id: number; index_status: string }>(`/api/v1/documents/${id}/index`, {
+      method: "POST",
     });
   },
 
@@ -298,5 +329,25 @@ export const api = {
     for await (const { event, data } of readSSE(response.body)) {
       yield { event, data: JSON.parse(data) } as ChatStreamEvent;
     }
+  },
+  chatStats(days: number) {
+    return request<ChatStats>(`/api/v1/chat/stats${query({ days })}`);
+  },
+  /** One image and one question; the answer starts a new conversation. */
+  answerWithImage(file: File, question: string) {
+    return request<ImageAnswer>("/api/v1/chat/image", {
+      method: "POST",
+      form: fileForm(file, { question }),
+    });
+  },
+  /** One PDF (not kept) and one question; the answer starts a new conversation. */
+  answerWithDocument(file: File, question: string) {
+    return request<DocumentAnswer>("/api/v1/chat/document", {
+      method: "POST",
+      form: fileForm(file, { question }),
+    });
+  },
+  transcribe(file: File) {
+    return request<Transcription>("/api/v1/chat/transcribe", { method: "POST", form: fileForm(file) });
   },
 };

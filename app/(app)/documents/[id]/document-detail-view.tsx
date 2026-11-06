@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -11,7 +11,9 @@ import {
   Download,
   FileQuestion,
   History,
+  MessagesSquare,
   Pencil,
+  Sparkles,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -27,11 +29,29 @@ import {
   useProcessingRequests,
   useUpdateDocument,
 } from "@/lib/queries";
-import { errorText, formatDate } from "@/lib/utils";
+import type { Citation, DocFlowDocument } from "@/lib/types";
+import { cn, errorText, fileExtension, formatDate } from "@/lib/utils";
+import { AskPanel } from "./ask-panel";
 import { AttemptsCard, PreviewCard, ReprocessCard, RunsCard } from "./side-cards";
+
+type Tab = "processing" | "ask";
+
+/** Only PDFs can be asked about; a renamed document may have lost its extension. */
+const askable = (doc: DocFlowDocument) =>
+  !["docx", "png", "jpg", "jpeg", "tif", "tiff"].includes(fileExtension(doc.name));
 import { RunPanel } from "./run-panel";
 
-export function DocumentDetailView({ id }: { id: number }) {
+export function DocumentDetailView({
+  id,
+  initialTab,
+  initialConversationId,
+  initialPage,
+}: {
+  id: number;
+  initialTab: Tab | null;
+  initialConversationId: number | null;
+  initialPage: number | null;
+}) {
   const router = useRouter();
   const document = useDocument(id);
   const requests = useProcessingRequests(id);
@@ -44,6 +64,14 @@ export function DocumentDetailView({ id }: { id: number }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [newName, setNewName] = useState<string | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [chosenTab, setTab] = useState<Tab | null>(initialTab);
+  const [preview, setPreview] = useState({ open: initialPage !== null, page: initialPage, jump: 0 });
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  // A citation was clicked: bring the preview, now at that page, into view.
+  useEffect(() => {
+    if (preview.jump) previewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [preview.jump]);
 
   if (document.error) {
     const notFound = document.error instanceof ApiError && document.error.status === 404;
@@ -66,6 +94,13 @@ export function DocumentDetailView({ id }: { id: number }) {
   const doc = document.data;
   const runs = requests.data ?? [];
   const selected = runs.find((r) => r.id === selectedId) ?? runs[0];
+  const canAsk = !!doc && askable(doc);
+  // Q&A uploads have no runs, so they open on the Ask tab.
+  const tab: Tab =
+    chosenTab === "ask" || (!chosenTab && canAsk && requests.isSuccess && runs.length === 0) ? "ask" : "processing";
+
+  const openCitation = (c: Citation) =>
+    setPreview((p) => ({ open: true, page: c.page, jump: p.jump + 1 }));
 
   async function download() {
     if (!doc) return;
@@ -142,6 +177,7 @@ export function DocumentDetailView({ id }: { id: number }) {
                 <Pencil className="size-4" />
               </button>
               <DocumentStatusBadge status={doc.status} />
+              <IndexBadge document={doc} />
             </span>
           ) : (
             <Skeleton className="h-9 w-72" />
@@ -169,7 +205,32 @@ export function DocumentDetailView({ id }: { id: number }) {
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
-          {requests.error ? (
+          {canAsk && (
+            <div role="tablist" aria-label="Document views" className="inline-flex rounded-xl border border-line bg-surface p-1">
+              {(
+                [
+                  ["processing", "Processing", Sparkles],
+                  ["ask", "Ask questions", MessagesSquare],
+                ] as const
+              ).map(([value, label, Icon]) => (
+                <button
+                  key={value}
+                  role="tab"
+                  aria-selected={tab === value}
+                  onClick={() => setTab(value)}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors",
+                    tab === value ? "bg-accent-soft text-accent" : "text-muted hover:text-fg",
+                  )}
+                >
+                  <Icon className="size-4" /> {label}
+                </button>
+              ))}
+            </div>
+          )}
+          {tab === "ask" && doc ? (
+            <AskPanel document={doc} initialConversationId={initialConversationId} onCitation={openCitation} />
+          ) : requests.error ? (
             <ErrorBanner message={errorText(requests.error)} />
           ) : requests.isPending ? (
             <Card className="space-y-4 p-6">
@@ -196,7 +257,17 @@ export function DocumentDetailView({ id }: { id: number }) {
               />
             </Card>
           )}
-          {doc && <PreviewCard fileId={doc.file_id} name={doc.name} />}
+          {doc && (
+            <div ref={previewRef} className="scroll-mt-6">
+              <PreviewCard
+                fileId={doc.file_id}
+                name={doc.name}
+                open={preview.open}
+                page={preview.page}
+                onOpenChange={(open) => setPreview((p) => ({ ...p, open }))}
+              />
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -253,5 +324,24 @@ export function DocumentDetailView({ id }: { id: number }) {
         </div>
       </Dialog>
     </div>
+  );
+}
+
+function IndexBadge({ document: doc }: { document: DocFlowDocument }) {
+  const status = doc.index_status;
+  if (!status || status === "NONE") return null;
+  const styles = {
+    READY: ["Indexed", "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-300 dark:ring-emerald-500/20"],
+    PROCESSING: ["Indexing…", "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-500/10 dark:text-amber-300 dark:ring-amber-500/20"],
+    FAILED: ["Index failed", "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-500/10 dark:text-rose-300 dark:ring-rose-500/20"],
+  } as const;
+  const [label, className] = styles[status];
+  return (
+    <span
+      title="Whether the text is split into passages for faster answers"
+      className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ring-1 ring-inset", className)}
+    >
+      {label}
+    </span>
   );
 }

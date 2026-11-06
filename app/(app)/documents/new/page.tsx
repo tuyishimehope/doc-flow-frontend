@@ -6,7 +6,8 @@ import { UploadForm } from "@/components/upload-form";
 
 export const metadata: Metadata = { title: "New document" };
 
-export default function NewDocumentPage() {
+export default async function NewDocumentPage({ searchParams }: PageProps<"/documents/new">) {
+  const { mode } = await searchParams;
   return (
     <div className="mx-auto max-w-3xl animate-fade-up">
       <PageHeader
@@ -16,9 +17,9 @@ export default function NewDocumentPage() {
           </Link>
         }
         title="New document"
-        description="Upload a file and choose how DocFlow should process it."
+        description="Upload a file and choose what DocFlow should do with it."
       />
-      <UploadForm />
+      <UploadForm initialMode={mode === "ask" ? "ask" : "process"} />
     </div>
   );
 }
