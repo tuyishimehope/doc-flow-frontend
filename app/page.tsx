@@ -1,123 +1,147 @@
 import Link from "next/link";
-import {
-  ArrowRight,
-  Clock3,
-  FileSignature,
-  FileText,
-  Lock,
-  Receipt,
-  ScanText,
-  Sparkles,
-  UploadCloud,
-} from "lucide-react";
 import { Logo } from "@/components/logo";
-import { buttonClass } from "@/components/button-class";
+import { API_URL } from "@/lib/api";
+import { AskSection } from "./_landing/ask-demo";
+import { GITHUB_URL } from "./_landing/bits";
+import { Hero } from "./_landing/hero";
+import { HowItWorks } from "./_landing/how-it-works";
+import { Outputs } from "./_landing/outputs";
+import { FinalCta, Toolkit } from "./_landing/toolkit";
 import { LandingNavActions } from "./landing-nav";
 
-const modes = [
-  {
-    icon: FileText,
-    title: "Document summary",
-    body: "Long reports condensed into the few paragraphs that matter, with the option to steer the focus.",
-  },
-  {
-    icon: Receipt,
-    title: "Invoice extraction",
-    body: "Vendor, customer, dates, currency, subtotal, tax, total and every line item — validated and exportable.",
-  },
-  {
-    icon: FileSignature,
-    title: "Contract metadata",
-    body: "Parties, effective and expiry dates, governing law, renewal and termination terms, and key obligations.",
-  },
+const DOCS_URL = `${API_URL}/docs`;
+
+const NAV = [
+  { label: "Product", href: "#product" },
+  { label: "How it works", href: "#how" },
+  { label: "Features", href: "#features" },
+  { label: "Docs", href: DOCS_URL, external: true },
+  { label: "GitHub", href: GITHUB_URL, external: true },
 ];
 
-const features = [
-  { icon: ScanText, title: "OCR built in", body: "Scanned PDFs, JPEG, PNG and TIFF are read with Tesseract." },
-  { icon: Clock3, title: "Runs in the background", body: "Upload and move on. Status updates live as the worker runs." },
-  { icon: Lock, title: "Private by default", body: "Every file and result is scoped to your account." },
-  { icon: UploadCloud, title: "JSON & CSV export", body: "Download structured results straight into your tools." },
-];
+const STACK = ["FastAPI", "Celery + Redis", "PostgreSQL", "MinIO", "Tesseract OCR", "OpenAI"];
 
 export default function Home() {
   return (
-    <div className="relative flex-1 overflow-hidden">
-      <div className="bg-grid pointer-events-none absolute inset-x-0 top-0 h-[640px]" />
-      <div className="pointer-events-none absolute top-[-220px] left-1/2 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-accent opacity-20 blur-[140px]" />
+    <div className="landing relative flex-1 overflow-x-clip">
+      {/* Frame lines at the content edges, as in the design. */}
+      <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-[1200px] -translate-x-1/2 border-x border-line/70 xl:block" />
 
-      <header className="relative mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-        <Logo />
-        <LandingNavActions />
+      <header className="relative z-20 border-b border-line/70">
+        <div className="mx-auto flex h-[72px] max-w-[1200px] items-center justify-between gap-6 px-5 sm:px-6">
+          <Logo />
+          <nav className="hidden items-center gap-8 text-[15px] text-muted md:flex">
+            {NAV.map((n) =>
+              n.external ? (
+                <a key={n.label} href={n.href} target="_blank" rel="noreferrer" className="transition-colors hover:text-fg">
+                  {n.label}
+                </a>
+              ) : (
+                <a key={n.label} href={n.href} className="transition-colors hover:text-fg">
+                  {n.label}
+                </a>
+              ),
+            )}
+          </nav>
+          <LandingNavActions />
+        </div>
       </header>
 
-      <section className="relative mx-auto max-w-4xl px-6 pt-16 pb-20 text-center sm:pt-24">
-        <div className="inline-flex items-center gap-2 rounded-full border border-line bg-surface/70 px-3 py-1 text-xs font-medium text-muted backdrop-blur">
-          <Sparkles className="size-3.5 text-accent" /> AI document processing
-        </div>
-        <h1 className="mt-6 text-4xl leading-[1.08] font-semibold tracking-tight text-fg sm:text-6xl">
-          From stacks of files
-          <br />
-          <span className="bg-linear-to-r from-brand-700 via-brand-500 to-brand-300 bg-clip-text text-transparent">
-            to structured data.
-          </span>
-        </h1>
-        <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-muted">
-          Upload PDFs, Word documents and scans. DocFlow extracts the text, runs the model in the background and
-          returns summaries, invoice fields and contract metadata you can export.
-        </p>
-        <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <Link href="/signup" className={buttonClass("primary", "lg")}>
-            Start for free <ArrowRight className="size-4" />
-          </Link>
-          <Link href="/login" className={buttonClass("secondary", "lg")}>
-            Sign in
-          </Link>
-        </div>
-      </section>
+      <main className="relative">
+        <Hero />
 
-      <section className="relative mx-auto max-w-6xl px-6 pb-20">
-        <div className="grid gap-4 md:grid-cols-3">
-          {modes.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="group rounded-2xl border border-line bg-surface p-6 shadow-card transition-all hover:-translate-y-0.5 hover:shadow-lg">
-              <div className="grid size-11 place-items-center rounded-xl bg-accent-soft text-accent transition-colors group-hover:bg-accent group-hover:text-white">
-                <Icon className="size-5" />
-              </div>
-              <h3 className="mt-5 text-base font-semibold text-fg">{title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-muted">{body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <section className="mx-auto mt-16 max-w-[1200px] px-5 sm:mt-20 sm:px-6">
+          <div className="grid grid-cols-2 border-y border-line sm:grid-cols-3 lg:grid-cols-[1.6fr_repeat(6,1fr)]">
+            <p className="col-span-2 flex items-center py-6 text-sm leading-snug text-muted sm:col-span-3 lg:col-span-1 lg:py-0 lg:pr-6">
+              Built on a stack
+              <br className="hidden lg:block" /> you can run yourself
+            </p>
+            {STACK.map((s) => (
+              <span
+                key={s}
+                className="lp-display flex h-20 items-center justify-center border-t border-line text-center text-[15px] font-semibold tracking-[-0.02em] text-slate-400 lg:h-28 lg:border-t-0 lg:border-l"
+              >
+                {s}
+              </span>
+            ))}
+          </div>
+        </section>
 
-      <section className="relative border-y border-line bg-surface/60">
-        <div className="mx-auto grid max-w-6xl gap-8 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map(({ icon: Icon, title, body }) => (
-            <div key={title}>
-              <Icon className="size-5 text-accent" />
-              <h4 className="mt-3 text-sm font-semibold text-fg">{title}</h4>
-              <p className="mt-1 text-sm leading-relaxed text-muted">{body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <HowItWorks />
+        <Outputs />
+        <AskSection />
+        <Toolkit />
+        <FinalCta />
+      </main>
 
-      <section className="relative mx-auto max-w-6xl px-6 py-20">
-        <div className="relative overflow-hidden rounded-3xl bg-brand-950 px-8 py-14 text-center sm:px-16">
-          <div className="absolute -top-24 left-1/2 h-64 w-[600px] -translate-x-1/2 rounded-full bg-brand-500 opacity-50 blur-[100px]" />
-          <h2 className="relative text-3xl font-semibold tracking-tight text-white">Process your first document in a minute.</h2>
-          <p className="relative mx-auto mt-3 max-w-lg text-white/60">
-            Create an account, drop in a file and watch the result arrive.
-          </p>
-          <Link href="/signup" className={buttonClass("primary", "lg") + " relative mt-8"}>
-            Create your account <ArrowRight className="size-4" />
-          </Link>
+      <footer className="relative mx-auto max-w-[1200px] px-5 sm:px-6">
+        <div className="grid gap-10 border-t border-line py-14 md:grid-cols-[1fr_auto]">
+          <div>
+            <Logo />
+            <p className="mt-4 text-sm leading-relaxed text-muted">
+              AI document processing.
+              <br />
+              PDF · DOCX · JPEG · PNG · TIFF
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-10 text-sm sm:grid-cols-3 sm:gap-16">
+            <FooterColumn
+              title="Product"
+              links={[
+                ["How it works", "#how"],
+                ["Features", "#features"],
+                ["Dashboard", "/dashboard"],
+              ]}
+            />
+            <FooterColumn
+              title="Developers"
+              links={[
+                ["GitHub", GITHUB_URL],
+                ["API docs", DOCS_URL],
+                ["Self-host", `${GITHUB_URL}#readme`],
+              ]}
+            />
+            <FooterColumn
+              title="Account"
+              links={[
+                ["Sign in", "/login"],
+                ["Get started", "/signup"],
+              ]}
+            />
+          </div>
         </div>
-      </section>
-
-      <footer className="relative mx-auto flex max-w-6xl items-center justify-between px-6 pb-10 text-xs text-subtle">
-        <span>© {new Date().getFullYear()} DocFlow</span>
-        <span>PDF · DOCX · JPEG · PNG · TIFF</span>
+        <div className="flex flex-col gap-2 border-t border-line py-6 text-[13px] text-subtle sm:flex-row sm:justify-between">
+          <span>© {new Date().getFullYear()} DocFlow</span>
+          <span>Built with FastAPI, Celery and PostgreSQL</span>
+        </div>
       </footer>
+    </div>
+  );
+}
+
+function FooterColumn({ title, links }: { title: string; links: [string, string][] }) {
+  return (
+    <div>
+      <p className="text-[11px] font-semibold tracking-[0.16em] text-subtle uppercase">{title}</p>
+      <ul className="mt-4 space-y-3">
+        {links.map(([label, href]) => (
+          <li key={label}>
+            {href.startsWith("/") ? (
+              <Link href={href} className="text-fg hover:text-accent">
+                {label}
+              </Link>
+            ) : href.startsWith("#") ? (
+              <a href={href} className="text-fg hover:text-accent">
+                {label}
+              </a>
+            ) : (
+              <a href={href} target="_blank" rel="noreferrer" className="text-fg hover:text-accent">
+                {label}
+              </a>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

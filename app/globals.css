@@ -126,3 +126,151 @@ body {
     visibility: hidden;
   }
 }
+
+/* ---------- Landing page ----------
+   Always light (the design has no dark variant) with #1742BE as its blue. */
+.landing {
+  --bg: #f5f8fd;
+  --surface: #ffffff;
+  --surface-2: #f0f4fa;
+  --line: #e3e9f2;
+  --fg: #0b1430;
+  --muted: #56617a;
+  --subtle: #8b94a8;
+  --accent: #1742be;
+  --accent-strong: #11349a;
+  --accent-soft: #e9f0fd;
+  --lp-sky: #4f8ff7;
+  --lp-ice: #8ec3ff;
+  --card-shadow: 0 1px 2px rgb(11 20 48 / 0.05), 0 8px 24px -12px rgb(11 20 48 / 0.12);
+  color-scheme: light;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.lp-display {
+  font-family: var(--font-display), var(--font-geist-sans), sans-serif;
+  letter-spacing: -0.045em;
+}
+
+.lp-gradient-text {
+  background: linear-gradient(90deg, var(--accent) 0%, var(--lp-sky) 55%, var(--lp-ice) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.lp-columns {
+  background-image: linear-gradient(to right, rgb(23 66 190 / 0.06) 1px, transparent 1px);
+  background-size: calc(100% / 14) 100%;
+  mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 80%);
+}
+
+.lp-dots {
+  background-image: radial-gradient(rgb(23 66 190 / 0.16) 1px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+
+/* Every landing animation: plays from its first frame and ends on the element's
+   normal styles, so with reduced motion (animation: none) the page shows the end state.
+   Inside a [data-in] wrapper it waits until the wrapper scrolls into view. */
+.lp-a {
+  animation-duration: var(--t, 0.6s);
+  animation-delay: var(--d, 0s);
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-in="false"] .lp-a {
+  animation-play-state: paused;
+}
+
+.lp-rise { animation-name: lp-rise; }
+.lp-fade { animation-name: lp-fade; }
+.lp-pop { animation-name: lp-pop; }
+.lp-fill { animation-name: lp-fill; transform-origin: left; }
+.lp-type { animation-name: lp-type; animation-timing-function: steps(24, end); }
+.lp-dash { animation-name: lp-dash; animation-timing-function: ease-in-out; }
+.lp-sweep { animation-name: lp-sweep; animation-timing-function: ease-in-out; }
+.lp-flash { animation-name: lp-flash; }
+.lp-ring { animation-name: lp-ring; }
+.lp-panel { animation-name: lp-panel; }
+.lp-dotfield { animation-name: lp-dotfield; animation-timing-function: ease-out; }
+
+/* Hero intro pieces only exist during the intro; their resting state is hidden. */
+.lp-pile, .lp-logo, .lp-chip { opacity: 0; }
+.lp-pile { animation-name: lp-pile; animation-timing-function: cubic-bezier(0.65, 0, 0.35, 1); }
+.lp-logo { animation-name: lp-logo; }
+.lp-chip { animation-name: lp-chip; }
+
+@keyframes lp-rise {
+  from { opacity: 0; transform: translateY(var(--y, 24px)); filter: blur(var(--b, 0px)); }
+}
+@keyframes lp-fade {
+  from { opacity: 0; }
+}
+@keyframes lp-pop {
+  0% { opacity: 0; transform: scale(0.9); }
+  60% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes lp-fill {
+  from { transform: scaleX(0); }
+}
+@keyframes lp-type {
+  from { clip-path: inset(0 100% 0 0); }
+}
+@keyframes lp-dash {
+  from { stroke-dashoffset: var(--len, 400); }
+}
+@keyframes lp-sweep {
+  0% { top: 0%; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+@keyframes lp-flash {
+  0% { opacity: 0; transform: translateY(8px); }
+  30% { opacity: 1; transform: none; box-shadow: 0 0 0 6px rgb(225 29 72 / 0.25); }
+  100% { box-shadow: 0 0 0 0 rgb(225 29 72 / 0); }
+}
+@keyframes lp-ring {
+  from { stroke-dashoffset: var(--len, 600); }
+}
+@keyframes lp-panel {
+  from { opacity: 0; transform: scale(0.97); }
+}
+@property --lp-r {
+  syntax: "<percentage>";
+  inherits: false;
+  initial-value: 140%;
+}
+@keyframes lp-dotfield {
+  from { --lp-r: 0%; }
+}
+.lp-dotmask {
+  mask-image: radial-gradient(circle at 50% 50%, black calc(var(--lp-r) - 30%), transparent var(--lp-r));
+}
+
+@keyframes lp-pile {
+  0% { opacity: 0; transform: translate(var(--x0), var(--y0)) rotate(var(--r0)) scale(1.25); }
+  10% { opacity: 1; }
+  38% { opacity: 1; transform: translate(var(--x0), var(--y0)) rotate(var(--r0)) scale(1); }
+  72% { opacity: 1; transform: translate(var(--x1), var(--y1)) rotate(var(--r1)) scale(0.42); }
+  100% { opacity: 0; transform: translate(var(--x1), var(--y1)) rotate(var(--r1)) scale(0.38); }
+}
+@keyframes lp-logo {
+  0% { opacity: 0; transform: scale(0.6); }
+  22% { opacity: 1; transform: scale(1); }
+  72% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.85); }
+}
+@keyframes lp-chip {
+  0% { opacity: 0; transform: translate(var(--cx), var(--cy)) rotate(0deg) scale(0.5); }
+  35% { opacity: 1; transform: rotate(var(--cr)); }
+  75% { opacity: 1; transform: rotate(var(--cr)); }
+  100% { opacity: 0; transform: translateY(-8px) rotate(var(--cr)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-a { animation: none !important; }
+  .lp-parallax { transform: none !important; }
+}
