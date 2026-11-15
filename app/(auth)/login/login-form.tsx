@@ -22,10 +22,10 @@ export function LoginForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-fg">Welcome back</h1>
-      <p className="mt-1.5 text-sm text-muted">Sign in to your DocFlow workspace.</p>
+      <h1 className="lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Welcome back</h1>
+      <p className="mt-2 text-[15px] text-muted">Sign in to pick up where you left off.</p>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      <form onSubmit={onSubmit} className="mt-9 space-y-5">
         {mutation.error && <ErrorBanner message={errorText(mutation.error)} />}
         <Input
           label="Email"
@@ -48,12 +48,12 @@ export function LoginForm() {
             </Link>
           }
         />
-        <Button type="submit" size="lg" className="w-full" loading={mutation.isPending}>
+        <Button type="submit" size="lg" className="w-full shadow-lg shadow-accent/25" loading={mutation.isPending}>
           Sign in <ArrowRight className="size-4" />
         </Button>
       </form>
 
-      <p className="mt-8 text-center text-sm text-muted">
+      <p className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
         New to DocFlow?{" "}
         <Link href="/signup" className="font-medium text-accent hover:underline">
           Create an account

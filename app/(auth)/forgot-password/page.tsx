@@ -23,7 +23,7 @@ export default function ForgotPasswordPage() {
         <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-accent-soft text-accent">
           <MailCheck className="size-6" />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-fg">Check your inbox</h1>
+        <h1 className="mt-5 lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Check your inbox</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted">{mutation.data.message}</p>
         <Link href="/login" className="mt-8 inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline">
           <ArrowLeft className="size-4" /> Back to sign in
@@ -34,7 +34,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-fg">Reset your password</h1>
+      <h1 className="lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Reset your password</h1>
       <p className="mt-1.5 text-sm text-muted">
         Enter your email and we&apos;ll send you a link to choose a new password.
       </p>

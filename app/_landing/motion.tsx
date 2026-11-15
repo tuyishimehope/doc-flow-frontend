@@ -1,15 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 
-/** Delay (and optional duration) for an `.lp-a` animation, in seconds. */
-export function at(delay: number, duration?: number, extra?: Record<string, string | number>): CSSProperties {
-  return {
-    "--d": `${delay}s`,
-    ...(duration !== undefined && { "--t": `${duration}s` }),
-    ...extra,
-  } as CSSProperties;
-}
+export { at } from "./at";
 
 export function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;

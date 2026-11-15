@@ -81,11 +81,25 @@ export function Field({
 
 export const Input = forwardRef<
   HTMLInputElement,
-  InputHTMLAttributes<HTMLInputElement> & { label?: string; hint?: ReactNode; trailing?: ReactNode }
->(function Input({ label, hint, trailing, className, id, ...props }, ref) {
+  InputHTMLAttributes<HTMLInputElement> & {
+    label?: string;
+    hint?: ReactNode;
+    trailing?: ReactNode;
+    /** Shown inside the input's right edge (e.g. a show-password button). */
+    endAdornment?: ReactNode;
+  }
+>(function Input({ label, hint, trailing, endAdornment, className, id, ...props }, ref) {
   const autoId = useId();
   const inputId = id ?? autoId;
-  const input = <input ref={ref} id={inputId} className={cn(fieldClass, "h-11", className)} {...props} />;
+  const field = <input ref={ref} id={inputId} className={cn(fieldClass, "h-11", className)} {...props} />;
+  const input = endAdornment ? (
+    <div className="relative">
+      {field}
+      <div className="absolute inset-y-0 right-1.5 flex items-center">{endAdornment}</div>
+    </div>
+  ) : (
+    field
+  );
   if (!label) return input;
   return (
     <Field label={label} hint={hint} htmlFor={inputId} trailing={trailing}>

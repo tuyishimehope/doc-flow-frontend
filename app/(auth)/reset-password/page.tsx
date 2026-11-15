@@ -36,7 +36,7 @@ function ResetPasswordForm() {
   if (!token) {
     return (
       <>
-        <h1 className="text-2xl font-semibold tracking-tight text-fg">Invalid reset link</h1>
+        <h1 className="lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Invalid reset link</h1>
         <p className="mt-2 text-sm text-muted">
           This link is missing its token. Request a new one to continue.
         </p>
@@ -53,7 +53,7 @@ function ResetPasswordForm() {
         <div className="mx-auto grid size-12 place-items-center rounded-2xl bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400">
           <CheckCircle2 className="size-6" />
         </div>
-        <h1 className="mt-5 text-2xl font-semibold tracking-tight text-fg">Password updated</h1>
+        <h1 className="mt-5 lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Password updated</h1>
         <p className="mt-2 text-sm text-muted">{mutation.data.message}</p>
         <Link href="/login" className={buttonClass("primary", "lg") + " mt-8 w-full"}>
           Sign in
@@ -66,7 +66,7 @@ function ResetPasswordForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-fg">Choose a new password</h1>
+      <h1 className="lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Choose a new password</h1>
       <p className="mt-1.5 text-sm text-muted">Make it at least 8 characters.</p>
       <form onSubmit={onSubmit} className="mt-8 space-y-4">
         {error && <ErrorBanner message={error} />}

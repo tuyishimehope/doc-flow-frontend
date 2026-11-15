@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { Button, ErrorBanner, Input } from "@/components/ui";
 import { PasswordInput, StrengthMeter } from "@/components/password-input";
@@ -40,10 +40,10 @@ export function SignupForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-fg">Create your account</h1>
-      <p className="mt-1.5 text-sm text-muted">Start extracting data from documents in minutes.</p>
+      <h1 className="lp-display text-[2rem] leading-[1.1] font-extrabold text-fg">Create your account</h1>
+      <p className="mt-2 text-[15px] text-muted">Process your first document in a minute.</p>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      <form onSubmit={onSubmit} className="mt-9 space-y-5">
         {error && <ErrorBanner message={error} />}
         <div className="grid grid-cols-2 gap-3">
           <Input label="First name" autoComplete="given-name" required value={form.first_name} onChange={set("first_name")} />
@@ -70,12 +70,15 @@ export function SignupForm() {
           />
           <StrengthMeter password={form.password} />
         </div>
-        <Button type="submit" size="lg" className="w-full" loading={mutation.isPending}>
+        <Button type="submit" size="lg" className="w-full shadow-lg shadow-accent/25" loading={mutation.isPending}>
           Create account <ArrowRight className="size-4" />
         </Button>
+        <p className="flex items-center justify-center gap-1.5 text-xs text-subtle">
+          <Lock className="size-3" /> Your files and results stay private to your account.
+        </p>
       </form>
 
-      <p className="mt-8 text-center text-sm text-muted">
+      <p className="mt-8 border-t border-line pt-6 text-center text-sm text-muted">
         Already have an account?{" "}
         <Link href="/login" className="font-medium text-accent hover:underline">
           Sign in

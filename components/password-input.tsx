@@ -7,17 +7,21 @@ import { Input } from "./ui";
 export function PasswordInput(props: Omit<ComponentProps<typeof Input>, "type">) {
   const [visible, setVisible] = useState(false);
   return (
-    <div className="relative">
-      <Input {...props} type={visible ? "text" : "password"} className="pr-11" />
-      <button
-        type="button"
-        onClick={() => setVisible((v) => !v)}
-        aria-label={visible ? "Hide password" : "Show password"}
-        className="absolute right-1.5 bottom-1.5 grid size-8 place-items-center rounded-lg text-subtle hover:bg-surface-2 hover:text-fg"
-      >
-        {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-      </button>
-    </div>
+    <Input
+      {...props}
+      type={visible ? "text" : "password"}
+      className="pr-11"
+      endAdornment={
+        <button
+          type="button"
+          onClick={() => setVisible((v) => !v)}
+          aria-label={visible ? "Hide password" : "Show password"}
+          className="grid size-8 place-items-center rounded-lg text-subtle hover:bg-surface-2 hover:text-fg"
+        >
+          {visible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+        </button>
+      }
+    />
   );
 }
 
