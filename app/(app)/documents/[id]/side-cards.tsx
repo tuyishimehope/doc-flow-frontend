@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { StatusBadge, TypeBadge } from "@/components/badges";
 import { ProcessingTypePicker } from "@/components/processing-type-picker";
 import { Button, Card, CardHeader, ErrorBanner, Skeleton, Spinner, Textarea } from "@/components/ui";
-import { useFilePreview, useReprocess } from "@/lib/queries";
+import { useDocumentFile, useReprocess } from "@/lib/queries";
 import type { ProcessingJob, ProcessingRequest, ProcessingType } from "@/lib/types";
 import { cn, errorText, fileExtension, formatDate, timeAgo } from "@/lib/utils";
 
@@ -162,13 +162,13 @@ export function AttemptsCard({ jobs, loading }: { jobs: ProcessingJob[] | undefi
 
 /** `page` opens a PDF at that page; `open` is controlled so citations can jump here. */
 export function PreviewCard({
-  fileId,
+  documentId,
   name,
   open,
   onOpenChange,
   page,
 }: {
-  fileId: number;
+  documentId: number;
   name: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -178,7 +178,7 @@ export function PreviewCard({
   // A renamed document can lose its extension; the Q&A copies are always PDFs.
   const isPdf = ext === "pdf" || !["docx", "png", "jpg", "jpeg", "tif", "tiff"].includes(ext);
   const previewable = isPdf || ["png", "jpg", "jpeg"].includes(ext);
-  const preview = useFilePreview(fileId, open && previewable);
+  const preview = useDocumentFile(documentId, open && previewable);
 
   return (
     <Card className="overflow-hidden">

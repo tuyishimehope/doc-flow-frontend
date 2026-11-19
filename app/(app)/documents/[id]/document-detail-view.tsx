@@ -106,7 +106,7 @@ export function DocumentDetailView({
     if (!doc) return;
     setDownloading(true);
     try {
-      saveBlob(await api.fileBlob(doc.file_id), doc.name);
+      saveBlob(await api.documentFile(doc.id), doc.name);
     } catch (e) {
       toast.error("Download failed", { description: errorText(e) });
     } finally {
@@ -260,7 +260,7 @@ export function DocumentDetailView({
           {doc && (
             <div ref={previewRef} className="scroll-mt-6">
               <PreviewCard
-                fileId={doc.file_id}
+                documentId={doc.id}
                 name={doc.name}
                 open={preview.open}
                 page={preview.page}

@@ -289,3 +289,20 @@ export interface ChatStats {
   reasoning_tokens: number;
   per_day: DailyUsage[];
 }
+
+/** POST /chat: one answer, not saved to a conversation. */
+export interface ChatResponse {
+  answer: string;
+  model: string;
+}
+
+export interface FileDeleteResponse {
+  file_id: number;
+  status: string;
+}
+
+/** GET /health: "degraded" (served as 503) when any dependency check fails. */
+export interface HealthResponse {
+  status: "ok" | "degraded" | string;
+  checks: Record<string, "ok" | "error" | string>;
+}

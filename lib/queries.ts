@@ -23,6 +23,7 @@ export const isActive = (status: ProcessingStatus) => ACTIVE_STATUSES.includes(s
 const POLL_MS = 2500;
 
 export const keys = {
+  health: ["health"] as const,
   me: ["me"] as const,
   stats: ["stats"] as const,
   documents: ["documents"] as const,
@@ -32,7 +33,7 @@ export const keys = {
   jobs: (id: number) => ["documents", id, "jobs"] as const,
   result: (requestId: number) => ["result", requestId] as const,
   files: (params: object) => ["files", params] as const,
-  fileBlob: (fileId: number) => ["file-blob", fileId] as const,
+  documentFile: (documentId: number) => ["document-file", documentId] as const,
   conversations: ["conversations"] as const,
   conversationList: ["conversations", "list"] as const,
   conversation: (id: number) => ["conversations", id] as const,
@@ -116,11 +117,22 @@ export function useResult(request: ProcessingRequest | undefined) {
   });
 }
 
-export function useFilePreview(fileId: number, enabled: boolean) {
+/** The API's dependency checks; only fetched while something shows them. */
+export function useHealth() {
   return useQuery({
-    queryKey: keys.fileBlob(fileId),
+    queryKey: keys.health,
+    queryFn: () => api.health(),
+    retry: false,
+    staleTime: 30_000,
+  });
+}
+
+/** The document's original file as a blob URL, for the preview. */
+export function useDocumentFile(documentId: number, enabled: boolean) {
+  return useQuery({
+    queryKey: keys.documentFile(documentId),
     queryFn: async () => {
-      const blob = await api.fileBlob(fileId);
+      const blob = await api.documentFile(documentId);
       return { blob, url: URL.createObjectURL(blob) };
     },
     enabled,

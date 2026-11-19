@@ -2,6 +2,8 @@ import { tokenStore } from "./auth-store";
 import { readSSE } from "./sse";
 import type {
   AskMode,
+  ChatModel,
+  ChatResponse,
   ChatStats,
   ChatStreamEvent,
   Conversation,
@@ -10,6 +12,8 @@ import type {
   DocumentAnswer,
   DocumentProcessingResponse,
   DocumentStatus,
+  FileDeleteResponse,
+  HealthResponse,
   ImageAnswer,
   MessageResponse,
   ModelsResponse,
@@ -259,6 +263,12 @@ export const api = {
     });
   },
 
+  /** The document's original file, looked up by document id (owner only). */
+  async documentFile(id: number) {
+    const response = await send(`/api/v1/documents/${id}/file`);
+    return response.blob();
+  },
+
   // Files
   listFiles(params: { skip?: number; limit?: number }) {
     return request<PaginatedFiles>(`/api/v1/files${query(params)}`);
@@ -266,6 +276,10 @@ export const api = {
   async fileBlob(id: number) {
     const response = await send(`/api/v1/files/${id}`);
     return response.blob();
+  },
+  /** Deletes the stored file and, with it, the document that uses it (its Q&A pages too). */
+  deleteFile(id: number) {
+    return request<FileDeleteResponse>(`/api/v1/files/${id}`, { method: "DELETE" });
   },
 
   // Processing requests
@@ -297,6 +311,17 @@ export const api = {
   // Chat
   chatModels() {
     return request<ModelsResponse>("/api/v1/chat/models");
+  },
+  /** One answer with no history; nothing is saved. The app streams instead (see streamChat). */
+  chat(message: string, model?: ChatModel | null) {
+    return request<ChatResponse>("/api/v1/chat", { method: "POST", json: { message, model: model ?? null } });
+  },
+  /** An empty conversation; without a title it is named after its first message. */
+  createConversation(title?: string | null) {
+    return request<Conversation>("/api/v1/chat/conversations", {
+      method: "POST",
+      json: { title: title?.trim() || null },
+    });
   },
   listConversations(params: { skip?: number; limit?: number }) {
     return request<PaginatedConversations>(`/api/v1/chat/conversations${query(params)}`);
@@ -349,5 +374,21 @@ export const api = {
   },
   transcribe(file: File) {
     return request<Transcription>("/api/v1/chat/transcribe", { method: "POST", form: fileForm(file) });
+  },
+  getTranscription(id: number) {
+    return request<Transcription>(`/api/v1/chat/transcribe/${id}`);
+  },
+
+  // Service
+  /** Dependency checks. A degraded service answers 503 with the same body, so this never throws on 503. */
+  async health(): Promise<HealthResponse> {
+    let response: Response;
+    try {
+      response = await fetch(`${API_URL}/health`, { cache: "no-store" });
+    } catch {
+      throw new ApiError(0, "Can't reach the DocFlow API. Is the backend running?");
+    }
+    if (response.ok || response.status === 503) return response.json();
+    throw new ApiError(response.status, await errorMessage(response));
   },
 };

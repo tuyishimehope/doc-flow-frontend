@@ -204,7 +204,7 @@ function NotStored({ document: doc }: { document: DocFlowDocument }) {
   async function makeCopy() {
     setPreparing(true);
     try {
-      const blob = await api.fileBlob(doc.file_id);
+      const blob = await api.documentFile(doc.id);
       const name = /\.pdf$/i.test(doc.name) ? doc.name : `${doc.name}.pdf`;
       const stored = await store.mutateAsync({ file: new File([blob], name, { type: "application/pdf" }) });
       toast.success("Ready for questions", { description: `${stored.pages} pages read.` });

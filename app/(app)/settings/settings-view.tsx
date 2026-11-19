@@ -1,17 +1,17 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { KeyRound, ShieldAlert, UserRound } from "lucide-react";
+import { Activity, KeyRound, RefreshCw, ShieldAlert, UserRound } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/app-shell";
 import { PasswordInput, StrengthMeter } from "@/components/password-input";
 import { Button, Card, CardHeader, Dialog, ErrorBanner, Input, Skeleton } from "@/components/ui";
 import { api } from "@/lib/api";
-import { useChangePassword, useMe, useUpdateProfile } from "@/lib/queries";
+import { useChangePassword, useHealth, useMe, useUpdateProfile } from "@/lib/queries";
 import type { User } from "@/lib/types";
 import { useAuthActions } from "@/lib/use-auth";
-import { errorText, formatDate } from "@/lib/utils";
+import { cn, errorText, formatDate } from "@/lib/utils";
 
 export function SettingsView() {
   const { data: me, isPending } = useMe();
@@ -28,6 +28,7 @@ export function SettingsView() {
         <>
           <ProfileCard key={me.updated_at} me={me} />
           <PasswordCard />
+          <ServiceCard />
           <DangerCard me={me} />
         </>
       )}
@@ -172,6 +173,60 @@ function DangerCard({ me }: { me: User }) {
           </Button>
         </div>
       </Dialog>
+    </Card>
+  );
+}
+
+const CHECK_LABELS: Record<string, string> = {
+  database: "Database",
+  redis: "Job queue (Redis)",
+  storage: "File storage",
+};
+
+/** What GET /health reports: handy when uploads or answers start failing. */
+function ServiceCard() {
+  const health = useHealth();
+  const data = health.data;
+  const ok = data?.status === "ok";
+  return (
+    <Card>
+      <CardHeader
+        icon={<Activity className="size-4" />}
+        title="Service status"
+        description="Whether the DocFlow API and the services it depends on are reachable."
+        action={
+          <Button variant="secondary" size="sm" onClick={() => health.refetch()} loading={health.isFetching}>
+            {!health.isFetching && <RefreshCw className="size-3.5" />} Check again
+          </Button>
+        }
+      />
+      <div className="p-5">
+        {health.isPending ? (
+          <div className="space-y-2.5">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-5 w-40" />
+          </div>
+        ) : health.error ? (
+          <ErrorBanner message={errorText(health.error)} />
+        ) : data ? (
+          <>
+            <p className={cn("text-sm font-medium", ok ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400")}>
+              {ok ? "All systems working" : "Some services aren't responding"}
+            </p>
+            <ul className="mt-3 divide-y divide-line rounded-xl border border-line">
+              {Object.entries(data.checks).map(([name, state]) => (
+                <li key={name} className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+                  <span className="text-fg">{CHECK_LABELS[name] ?? name}</span>
+                  <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium", state === "ok" ? "text-emerald-700 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+                    <span className={cn("size-1.5 rounded-full", state === "ok" ? "bg-emerald-500" : "bg-rose-500")} />
+                    {state === "ok" ? "OK" : "Not responding"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </div>
     </Card>
   );
 }
