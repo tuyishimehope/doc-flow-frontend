@@ -17,8 +17,8 @@ const tabs: { label: string; value: DocumentStatus | undefined }[] = [
   { label: "Archived", value: "ARCHIVED" },
 ];
 
-export function DocumentsView() {
-  const [search, setSearch] = useState("");
+export function DocumentsView({ initialQuery = "" }: { initialQuery?: string }) {
+  const [search, setSearch] = useState(initialQuery);
   const [status, setStatus] = useState<DocumentStatus | undefined>(undefined);
   const [page, setPage] = useState(0);
   const q = useDeferredValue(search.trim());

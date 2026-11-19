@@ -18,8 +18,8 @@ export function ChatLayout({ children }: { children: ReactNode }) {
 
   return (
     <ListContext.Provider value={drawer}>
-      {/* Fills the viewport under the shell: its main padding (and the mobile header below lg). */}
-      <div className="relative flex h-[calc(100dvh-7.5rem)] min-h-[28rem] overflow-hidden rounded-2xl border border-line bg-surface shadow-card lg:h-[calc(100dvh-5rem)]">
+      {/* Fills the viewport under the shell: its padding, top bar, gap and main padding. */}
+      <div className="relative flex h-[calc(100dvh-8.5rem)] min-h-[28rem] overflow-hidden rounded-[22px] border border-line/70 bg-surface shadow-card lg:h-[calc(100dvh-10rem)]">
         <aside className="hidden w-72 shrink-0 border-r border-line md:block">
           <ConversationList />
         </aside>

@@ -132,9 +132,9 @@ export const Textarea = forwardRef<
 
 // ---------- Surfaces ----------
 
-export function Card({ className, children }: { className?: string; children: ReactNode }) {
+export function Card({ className, children, ...props }: React.HTMLAttributes<HTMLDivElement> & { children: ReactNode }) {
   return (
-    <div className={cn("rounded-2xl border border-line bg-surface shadow-card", className)}>
+    <div {...props} className={cn("rounded-[22px] border border-line/70 bg-surface shadow-card", className)}>
       {children}
     </div>
   );
@@ -152,7 +152,7 @@ export function CardHeader({
   icon?: ReactNode;
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-line px-5 py-4">
+    <div className="flex items-start justify-between gap-4 border-b border-line/70 px-5 py-4">
       <div className="flex min-w-0 items-start gap-3">
         {icon && (
           <div className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
@@ -169,8 +169,8 @@ export function CardHeader({
   );
 }
 
-export function Skeleton({ className }: { className?: string }) {
-  return <div className={cn("animate-pulse rounded-lg bg-surface-2", className)} />;
+export function Skeleton({ className, style }: { className?: string; style?: React.CSSProperties }) {
+  return <div style={style} className={cn("animate-pulse rounded-lg bg-surface-2", className)} />;
 }
 
 export function Spinner({ className }: { className?: string }) {
