@@ -13,7 +13,7 @@ export function Toolkit() {
   const inView = useInView(ref, 0.2);
   return (
     <section id="features" className="relative overflow-hidden bg-[#06132f] py-24 text-white sm:py-32">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[1100px] -translate-x-1/2 bg-[radial-gradient(50%_50%_at_50%_50%,rgb(23_66_190/0.75),transparent_70%)]" />
+      <div className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[1100px] -translate-x-1/2 bg-[radial-gradient(50%_50%_at_50%_50%,rgb(26_99_240/0.75),transparent_70%)]" />
       <div ref={ref} data-in={inView ? "true" : "false"} className="relative mx-auto max-w-[1200px] px-5 sm:px-6">
         <div className="text-center">
           <div className="lp-a lp-rise" style={at(0, 0.5, { "--y": "12px" })}>
@@ -42,7 +42,7 @@ export function Toolkit() {
           </Tile>
           <Tile index={3} className="md:col-span-2" title="Private by default" body="Every file and result belongs to one account, with per-user storage.">
             <div className="flex flex-col items-center pt-2">
-              <div className="grid size-24 place-items-center rounded-[26px] bg-gradient-to-b from-[#3b7bf0] to-[#1742be] shadow-[0_20px_40px_-10px_rgb(23_66_190/0.8)] ring-1 ring-white/20">
+              <div className="grid size-24 place-items-center rounded-[26px] bg-gradient-to-b from-[#59a2ff] to-[#1a63f0] shadow-[0_20px_40px_-10px_rgb(26_99_240/0.8)] ring-1 ring-white/20">
                 <Lock className="size-9 text-white" strokeWidth={1.75} />
               </div>
               <span className="mt-4 rounded-full bg-emerald-400/10 px-2.5 py-0.5 font-mono text-[11px] text-emerald-300">
@@ -210,7 +210,7 @@ export function FinalCta() {
     <section className="px-5 pt-24 pb-20 sm:px-6 sm:pt-28">
       <div ref={ref} data-in={inView ? "true" : "false"} className="mx-auto max-w-[1200px]">
         <div
-          className="lp-a lp-panel relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#2a6ff2] via-accent to-[#11349a] px-6 py-20 text-center text-white shadow-[0_40px_80px_-30px_rgb(23_66_190/0.6)] sm:py-24"
+          className="lp-a lp-panel relative overflow-hidden rounded-[32px] bg-gradient-to-br from-[#59a2ff] via-accent to-[#154fd0] px-6 py-20 text-center text-white shadow-[0_40px_80px_-30px_rgb(26_99_240/0.6)] sm:py-24"
           style={at(0, 0.9)}
         >
           <div className="lp-a lp-dotfield lp-dotmask pointer-events-none absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.35)_1px,transparent_1.2px)] bg-size-[22px_22px]" style={at(0.2, 1.4)} />

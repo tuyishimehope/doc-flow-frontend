@@ -28,25 +28,25 @@
     --subtle: #637089;
     --accent: var(--color-brand-500);
     --accent-strong: var(--color-brand-400);
-    --accent-soft: rgb(74 108 247 / 0.18);
+    --accent-soft: rgb(47 128 255 / 0.16);
     --card-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
     color-scheme: dark;
   }
 }
 
-/* Light blue brand scale (500 is the accent). */
+/* Azure brand scale: 600 is the light-mode accent, 500 the dark-mode one. */
 @theme {
-  --color-brand-50: #eef1ff;
-  --color-brand-100: #dfe5fe;
-  --color-brand-200: #c3cffd;
-  --color-brand-300: #9db0f7;
-  --color-brand-400: #7590f6;
-  --color-brand-500: #4a6cf7;
-  --color-brand-600: #2f4fde;
-  --color-brand-700: #2843bf;
-  --color-brand-800: #1f3a99;
-  --color-brand-900: #1a2a6c;
-  --color-brand-950: #0d1430;
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9eaff;
+  --color-brand-200: #bcdaff;
+  --color-brand-300: #8ec3ff;
+  --color-brand-400: #59a2ff;
+  --color-brand-500: #2f80ff;
+  --color-brand-600: #1a63f0;
+  --color-brand-700: #154fd0;
+  --color-brand-800: #1742a8;
+  --color-brand-900: #183a84;
+  --color-brand-950: #0b1b45;
 }
 
 @theme inline {
@@ -71,7 +71,7 @@ body {
 }
 
 ::selection {
-  background: rgb(74 108 247 / 0.22);
+  background: rgb(47 128 255 / 0.22);
 }
 
 .bg-grid {
@@ -130,7 +130,7 @@ body {
 }
 
 /* ---------- Landing page ----------
-   Always light (the design has no dark variant) with #1742BE as its blue. */
+   Always light (the design has no dark variant), in the azure brand blue. */
 .landing {
   --bg: #f5f8fd;
   --surface: #ffffff;
@@ -139,11 +139,11 @@ body {
   --fg: #0b1430;
   --muted: #56617a;
   --subtle: #8b94a8;
-  --accent: #1742be;
-  --accent-strong: #11349a;
-  --accent-soft: #e9f0fd;
-  --lp-sky: #4f8ff7;
-  --lp-ice: #8ec3ff;
+  --accent: var(--color-brand-600);
+  --accent-strong: var(--color-brand-700);
+  --accent-soft: var(--color-brand-50);
+  --lp-sky: var(--color-brand-400);
+  --lp-ice: var(--color-brand-200);
   --card-shadow: 0 1px 2px rgb(11 20 48 / 0.05), 0 8px 24px -12px rgb(11 20 48 / 0.12);
   color-scheme: light;
   background: var(--bg);
@@ -163,13 +163,13 @@ body {
 }
 
 .lp-columns {
-  background-image: linear-gradient(to right, rgb(23 66 190 / 0.06) 1px, transparent 1px);
+  background-image: linear-gradient(to right, rgb(26 99 240 / 0.06) 1px, transparent 1px);
   background-size: calc(100% / 14) 100%;
   mask-image: linear-gradient(to bottom, black 0%, black 40%, transparent 80%);
 }
 
 .lp-dots {
-  background-image: radial-gradient(rgb(23 66 190 / 0.16) 1px, transparent 1.2px);
+  background-image: radial-gradient(rgb(26 99 240 / 0.16) 1px, transparent 1.2px);
   background-size: 18px 18px;
 }
 
@@ -290,4 +290,10 @@ body {
     color-mix(in oklab, var(--subtle) 55%, transparent) 0 2px,
     transparent 2px 7px
   );
+}
+
+.lp-serif {
+  font-family: var(--font-serif), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.02em;
 }

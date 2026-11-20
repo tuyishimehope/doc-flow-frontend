@@ -8,7 +8,7 @@ export default function AuthLayout({ children }: LayoutProps<"/">) {
   return (
     <div className="landing relative grid min-h-screen flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
       <div className="relative flex flex-col overflow-hidden px-6 py-7 sm:px-12">
-        <div className="pointer-events-none absolute -top-48 -left-40 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgb(79_143_247/0.22),transparent)]" />
+        <div className="pointer-events-none absolute -top-48 -left-40 size-[560px] rounded-full bg-[radial-gradient(closest-side,rgb(47_128_255/0.22),transparent)]" />
 
         <div className="relative flex items-center justify-between">
           <Logo />

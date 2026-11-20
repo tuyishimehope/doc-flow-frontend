@@ -12,7 +12,7 @@ const POINTS = [
 export function AuthShowcase() {
   return (
     <div className="relative hidden p-3 lg:block">
-      <div className="relative flex h-full min-h-[640px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-br from-[#2a6ff2] via-[#1742be] to-[#0d2a7a] px-12 py-12 text-white xl:px-16">
+      <div className="relative flex h-full min-h-[640px] flex-col overflow-hidden rounded-[28px] bg-gradient-to-br from-[#59a2ff] via-[#1a63f0] to-[#0b1b45] px-12 py-12 text-white xl:px-16">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(rgb(255_255_255/0.22)_1px,transparent_1.2px)] bg-size-[22px_22px] [mask-image:radial-gradient(ellipse_at_70%_40%,black,transparent_70%)]" />
         <div className="pointer-events-none absolute -top-40 -right-24 size-[520px] rounded-full bg-sky-300/30 blur-[120px]" />
 

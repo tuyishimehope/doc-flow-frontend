@@ -10,15 +10,15 @@ export function LogoMark({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={cn("size-8", className)} aria-hidden>
       <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#9db0f7" />
-          <stop offset="1" stopColor="#2f4fde" />
+        <linearGradient id={id} x1="6" y1="0" x2="26" y2="32" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#59a2ff" />
+          <stop offset="1" stopColor="#1a63f0" />
         </linearGradient>
       </defs>
       <rect width="32" height="32" rx="9" fill={`url(#${id})`} />
-      <path d="M10 8h7.5L22 12.5V24H10z" fill="white" fillOpacity=".95" />
-      <path d="M17.5 8v4.5H22" fill="none" stroke="#2f4fde" strokeOpacity=".35" strokeWidth="1.2" />
-      <path d="M13 16.5h6M13 19.5h4" stroke="#4a6cf7" strokeWidth="1.6" strokeLinecap="round" />
+      {/* A "D" whose bowl repeats inward, like a ripple: documents flowing through. */}
+      <path d="M9.5 8.5v15h4.75a7.5 7.5 0 0 0 0-15z" fill="none" stroke="white" strokeWidth="2.6" strokeLinejoin="round" />
+      <path d="M13.5 13a3 3 0 0 1 0 6" fill="none" stroke="#bcdaff" strokeWidth="2.2" strokeLinecap="round" />
     </svg>
   );
 }

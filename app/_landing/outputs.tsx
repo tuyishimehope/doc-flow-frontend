@@ -202,7 +202,7 @@ function PageMock({ out }: { out: Output }) {
         </div>
         <Lines className="mt-6" widths={[80, 66]} />
       </div>
-      <span className="lp-a lp-sweep absolute inset-x-0 h-px opacity-0 bg-accent shadow-[0_0_12px_2px_rgb(23_66_190/0.35)]" style={at(0.1, 0.8)} />
+      <span className="lp-a lp-sweep absolute inset-x-0 h-px opacity-0 bg-accent shadow-[0_0_12px_2px_rgb(26_99_240/0.35)]" style={at(0.1, 0.8)} />
     </div>
   );
 }

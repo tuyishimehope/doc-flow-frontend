@@ -19,7 +19,7 @@ const NAV = [
   { label: "GitHub", href: GITHUB_URL, external: true },
 ];
 
-const STACK = ["FastAPI", "Celery + Redis", "PostgreSQL", "MinIO", "Tesseract OCR", "OpenAI"];
+const STACK = ["FastAPI", "Celery + Redis", "PostgreSQL", "MinIO", "Docling", "OpenAI"];
 
 export default function Home() {
   return (
@@ -27,17 +27,18 @@ export default function Home() {
       {/* Frame lines at the content edges, as in the design. */}
       <div className="pointer-events-none absolute inset-y-0 left-1/2 hidden w-[1200px] -translate-x-1/2 border-x border-line/70 xl:block" />
 
-      <header className="relative z-20 border-b border-line/70">
-        <div className="mx-auto flex h-[72px] max-w-[1200px] items-center justify-between gap-6 px-5 sm:px-6">
+      {/* Sits over the hero's dark sky, so its text is white. */}
+      <header className="absolute inset-x-0 top-0 z-20 px-3 pt-4 [--fg:#fff] sm:px-6">
+        <div className="mx-auto flex h-14 max-w-[1100px] items-center justify-between gap-6 rounded-full bg-white/[0.06] pr-2 pl-4 ring-1 ring-white/15 backdrop-blur-md">
           <Logo />
-          <nav className="hidden items-center gap-8 text-[15px] text-muted md:flex">
+          <nav className="hidden items-center gap-8 text-[14px] text-white/75 md:flex">
             {NAV.map((n) =>
               n.external ? (
-                <a key={n.label} href={n.href} target="_blank" rel="noreferrer" className="transition-colors hover:text-fg">
+                <a key={n.label} href={n.href} target="_blank" rel="noreferrer" className="transition-colors hover:text-white">
                   {n.label}
                 </a>
               ) : (
-                <a key={n.label} href={n.href} className="transition-colors hover:text-fg">
+                <a key={n.label} href={n.href} className="transition-colors hover:text-white">
                   {n.label}
                 </a>
               ),

@@ -49,7 +49,7 @@ function StatCard({
       className={cn(
         "lp-a lp-rise group relative flex flex-col overflow-hidden rounded-[22px] p-5 transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 sm:p-6",
         hero
-          ? "bg-gradient-to-b from-brand-950 via-brand-700 to-brand-500 text-white shadow-[0_18px_40px_-18px_rgb(47_79_222/.7)]"
+          ? "bg-gradient-to-b from-brand-950 via-brand-700 to-brand-500 text-white shadow-[0_18px_40px_-18px_rgb(26_99_240/.6)]"
           : "border border-line/70 bg-surface text-fg shadow-card hover:shadow-lg",
       )}
     >
@@ -244,7 +244,7 @@ function AskCard() {
       style={at(0.55, 0.6)}
       className="lp-a lp-rise group relative flex min-h-64 flex-col overflow-hidden rounded-[22px] bg-gradient-to-b from-brand-950 via-brand-800 to-brand-600 p-6 text-white shadow-card md:col-span-2 xl:col-span-1"
     >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_100%_0%,rgb(157_176_247/.35),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120%_80%_at_100%_0%,rgb(142_195_255/.35),transparent_60%)]" />
       <svg className="pointer-events-none absolute -right-8 -bottom-10 size-48 text-white/10" viewBox="0 0 100 100" aria-hidden>
         {[14, 26, 38, 50].map((r) => (
           <circle key={r} cx="50" cy="50" r={r} fill="none" stroke="currentColor" strokeWidth="1" />
