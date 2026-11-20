@@ -1,4 +1,5 @@
 import { tokenStore } from "./auth-store";
+import { isJson, serverStatus, SLOW_REQUEST_MS } from "./server-status";
 import { readSSE } from "./sse";
 import type {
   AskMode,
@@ -37,13 +38,28 @@ export const API_URL = (
   process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"
 ).replace(/\/$/, "");
 
+serverStatus.configure(`${API_URL}/health`);
+
+/**
+ * - `network`: no response at all (offline, or the server is asleep).
+ * - `starting`: the host answered for the app with a gateway error (502/503/504) while it boots.
+ * - `http`: the app answered with an error.
+ */
+export type ApiErrorKind = "network" | "starting" | "http";
+
 export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    public kind: ApiErrorKind = "http",
   ) {
     super(message);
     this.name = "ApiError";
+  }
+
+  /** The server isn't up yet; the request is worth retrying in a moment. */
+  get isTransient() {
+    return this.kind !== "http";
   }
 }
 
@@ -54,33 +70,77 @@ export function setUnauthorizedHandler(handler: (() => void) | null) {
   onUnauthorized = handler;
 }
 
-// FastAPI returns `{detail: string}` or, for validation errors, `{detail: [{msg, loc}]}`.
-async function errorMessage(response: Response): Promise<string> {
+const NETWORK_MESSAGE =
+  "Can't reach DocFlow. Check your connection; if it's fine, the server may still be waking up, so try again in a minute.";
+const STARTING_MESSAGE = "DocFlow is still starting up after a quiet spell. Please try again in a minute.";
+
+// FastAPI's default texts, which say nothing useful to a person.
+const GENERIC_DETAIL = /^(not found|internal server error|bad request|forbidden|unauthorized|method not allowed)$/i;
+
+const STATUS_MESSAGES: Record<number, string> = {
+  400: "That request wasn't valid. Please check and try again.",
+  401: "Your session has ended. Please sign in again.",
+  403: "You don't have access to this.",
+  404: "We couldn't find that. It may have been moved or deleted.",
+  408: "The request took too long. Please try again.",
+  409: "That conflicts with something that already exists.",
+  413: "That file is too large to upload.",
+  415: "That file type isn't supported. Use a PDF, DOCX, JPEG, PNG or TIFF.",
+  500: "Something went wrong on our side. Please try again in a moment.",
+};
+
+function fieldName(loc: unknown[] | undefined) {
+  const field = loc?.filter((l) => l !== "body" && l !== "query" && l !== "path").join(" ");
+  return field ? field.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "";
+}
+
+function retryAfter(response: Response) {
+  const seconds = Number(response.headers.get("retry-after"));
+  if (!seconds) return "Too many requests. Please wait a moment and try again.";
+  return seconds < 90
+    ? `Too many requests. Try again in ${Math.ceil(seconds)} seconds.`
+    : `Too many requests. Try again in about ${Math.ceil(seconds / 60)} minutes.`;
+}
+
+/** Turns an error response into an `ApiError` with a message a person can act on. */
+async function toApiError(response: Response): Promise<ApiError> {
+  const { status } = response;
+  if (!isJson(response) && (status === 502 || status === 503 || status === 504)) {
+    return new ApiError(status, STARTING_MESSAGE, "starting");
+  }
+
+  // FastAPI returns `{detail: string}` or, for validation errors, `{detail: [{msg, loc}]}`.
+  let detail: string | null = null;
   try {
     const body = await response.json();
-    const detail = body?.detail;
-    if (typeof detail === "string") return detail;
-    if (Array.isArray(detail) && detail.length > 0) {
-      return detail
+    if (typeof body?.detail === "string") detail = body.detail;
+    else if (Array.isArray(body?.detail) && body.detail.length > 0) {
+      detail = body.detail
         .map((d: { msg?: string; loc?: unknown[] }) => {
-          const field = d.loc?.filter((l) => l !== "body").join(".");
-          return field ? `${field}: ${d.msg}` : d.msg;
+          const msg = (d.msg ?? "is invalid").replace(/^Value error, /, "");
+          const field = fieldName(d.loc);
+          return field ? `${field}: ${msg}` : msg;
         })
-        .join("; ");
+        .join(" · ");
     }
   } catch {}
-  if (response.status === 429) return "Too many attempts. Please wait and try again.";
-  return response.statusText || `Request failed (${response.status})`;
+
+  if (status === 429) return new ApiError(status, detail && !/too many/i.test(detail) ? detail : retryAfter(response));
+  if (status >= 500 && status !== 503) return new ApiError(status, STATUS_MESSAGES[500]);
+  if (detail && !GENERIC_DETAIL.test(detail)) return new ApiError(status, detail);
+  return new ApiError(status, STATUS_MESSAGES[status] ?? `Something went wrong (error ${status}). Please try again.`);
 }
 
 type RequestOptions = Omit<RequestInit, "body"> & {
   json?: unknown;
   form?: URLSearchParams | FormData;
   auth?: boolean;
+  /** The endpoint does real work before answering (an LLM call), so a long wait isn't a sleeping server. */
+  slow?: boolean;
 };
 
 async function send(path: string, options: RequestOptions = {}) {
-  const { json, form, auth = true, headers, ...init } = options;
+  const { json, form, auth = true, slow: expectSlow = false, headers, ...init } = options;
   const finalHeaders = new Headers(headers);
   let body: BodyInit | undefined;
 
@@ -94,19 +154,28 @@ async function send(path: string, options: RequestOptions = {}) {
   const token = auth ? tokenStore.get() : null;
   if (token) finalHeaders.set("Authorization", `Bearer ${token}`);
 
+  // A sleeping server holds the request open while it boots; say so instead of spinning silently.
+  const slow = expectSlow ? undefined : setTimeout(() => serverStatus.unreachable(), SLOW_REQUEST_MS);
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, { ...init, headers: finalHeaders, body });
   } catch (error) {
     // Let callers tell a deliberate stop apart from a network failure.
     if (init.signal?.aborted) throw error;
-    throw new ApiError(0, "Can't reach the DocFlow API. Is the backend running?");
+    serverStatus.unreachable();
+    throw new ApiError(0, NETWORK_MESSAGE, "network");
+  } finally {
+    clearTimeout(slow);
   }
 
   if (!response.ok) {
     if (response.status === 401 && token) onUnauthorized?.();
-    throw new ApiError(response.status, await errorMessage(response));
+    const error = await toApiError(response);
+    if (error.isTransient) serverStatus.unreachable();
+    else serverStatus.reachable();
+    throw error;
   }
+  serverStatus.reachable();
   return response;
 }
 
@@ -144,18 +213,29 @@ function uploadForm<T>(path: string, form: FormData, onProgress?: (fraction: num
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress?.(e.loaded / e.total);
     };
-    xhr.onerror = () => reject(new ApiError(0, "Can't reach the DocFlow API. Is the backend running?"));
+    xhr.onerror = () => {
+      serverStatus.unreachable();
+      reject(new ApiError(0, NETWORK_MESSAGE, "network"));
+    };
     xhr.onload = async () => {
       const response = new Response(xhr.responseText, {
         status: xhr.status,
         statusText: xhr.statusText,
+        headers: {
+          "content-type": xhr.getResponseHeader("content-type") ?? "",
+          "retry-after": xhr.getResponseHeader("retry-after") ?? "",
+        },
       });
       if (xhr.status >= 200 && xhr.status < 300) {
+        serverStatus.reachable();
         resolve(await response.json());
         return;
       }
       if (xhr.status === 401 && token) onUnauthorized?.();
-      reject(new ApiError(xhr.status, await errorMessage(response)));
+      const error = await toApiError(response);
+      if (error.isTransient) serverStatus.unreachable();
+      else serverStatus.reachable();
+      reject(error);
     };
     xhr.send(form);
   });
@@ -254,7 +334,7 @@ export const api = {
     return uploadForm<StoredDocument>("/api/v1/documents/qa", form, onProgress);
   },
   askDocument(id: number, body: { question: string; conversation_id?: number | null; mode?: AskMode }) {
-    return request<DocumentAnswer>(`/api/v1/documents/${id}/ask`, { method: "POST", json: body });
+    return request<DocumentAnswer>(`/api/v1/documents/${id}/ask`, { method: "POST", json: body, slow: true });
   },
   /** Starts (re-)indexing in the background; poll the document for `index_status`. */
   reindexDocument(id: number) {
@@ -314,7 +394,7 @@ export const api = {
   },
   /** One answer with no history; nothing is saved. The app streams instead (see streamChat). */
   chat(message: string, model?: ChatModel | null) {
-    return request<ChatResponse>("/api/v1/chat", { method: "POST", json: { message, model: model ?? null } });
+    return request<ChatResponse>("/api/v1/chat", { method: "POST", json: { message, model: model ?? null }, slow: true });
   },
   /** An empty conversation; without a title it is named after its first message. */
   createConversation(title?: string | null) {
@@ -350,7 +430,7 @@ export const api = {
       signal,
       headers: { Accept: "text/event-stream" },
     });
-    if (!response.body) throw new ApiError(0, "The answer stream could not be read.");
+    if (!response.body) throw new ApiError(0, "The answer couldn't be read. Please try again.");
     for await (const { event, data } of readSSE(response.body)) {
       yield { event, data: JSON.parse(data) } as ChatStreamEvent;
     }
@@ -363,6 +443,7 @@ export const api = {
     return request<ImageAnswer>("/api/v1/chat/image", {
       method: "POST",
       form: fileForm(file, { question }),
+      slow: true,
     });
   },
   /** One PDF (not kept) and one question; the answer starts a new conversation. */
@@ -370,10 +451,11 @@ export const api = {
     return request<DocumentAnswer>("/api/v1/chat/document", {
       method: "POST",
       form: fileForm(file, { question }),
+      slow: true,
     });
   },
   transcribe(file: File) {
-    return request<Transcription>("/api/v1/chat/transcribe", { method: "POST", form: fileForm(file) });
+    return request<Transcription>("/api/v1/chat/transcribe", { method: "POST", form: fileForm(file), slow: true });
   },
   getTranscription(id: number) {
     return request<Transcription>(`/api/v1/chat/transcribe/${id}`);
@@ -386,9 +468,9 @@ export const api = {
     try {
       response = await fetch(`${API_URL}/health`, { cache: "no-store" });
     } catch {
-      throw new ApiError(0, "Can't reach the DocFlow API. Is the backend running?");
+      throw new ApiError(0, NETWORK_MESSAGE, "network");
     }
-    if (response.ok || response.status === 503) return response.json();
-    throw new ApiError(response.status, await errorMessage(response));
+    if (response.ok || (response.status === 503 && isJson(response))) return response.json();
+    throw await toApiError(response);
   },
 };

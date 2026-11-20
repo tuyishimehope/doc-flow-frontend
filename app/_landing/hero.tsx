@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { LogoMark } from "@/components/logo";
 import { useToken } from "@/lib/auth-store";
+import { wakeServer } from "@/lib/server-status";
 import { cn } from "@/lib/utils";
 import { FileBadge, Pill, type FileKind, type PillTone } from "./bits";
 import { at } from "./motion";
@@ -80,6 +81,7 @@ export function Hero() {
         <div className="lp-a lp-rise mt-7 flex items-center justify-center gap-3" style={at(0.65, 0.6, { "--y": "16px" })}>
           <Link
             href={token ? "/dashboard" : "/signup"}
+            onClick={wakeServer}
             className="inline-flex h-11 items-center gap-2 rounded-full bg-white px-5 text-sm font-semibold text-brand-950 shadow-[0_10px_30px_-10px_rgb(89_162_255/0.8)] transition-transform hover:-translate-y-0.5"
           >
             {token ? "Open dashboard" : "Start for free"} <ArrowRight className="size-4" />

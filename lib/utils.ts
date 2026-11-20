@@ -92,6 +92,9 @@ export function fileExtension(name: string) {
   return (name.split(".").pop() ?? "").toLowerCase();
 }
 
+/** A message to show for any thrown value; `ApiError` messages are already written for people. */
 export function errorText(error: unknown) {
-  return error instanceof Error ? error.message : "Something went wrong";
+  if (error instanceof Error && error.name === "ApiError") return error.message;
+  if (error instanceof TypeError) return "Something went wrong in the app. Please reload the page and try again.";
+  return error instanceof Error && error.message ? error.message : "Something went wrong. Please try again.";
 }
